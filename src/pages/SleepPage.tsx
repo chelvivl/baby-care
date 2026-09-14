@@ -35,6 +35,7 @@ export function SleepPage({ activeBaby, onOpenSettings }: SleepPageProps) {
   const [view, setView] = useState<SleepView>({ kind: 'main' })
   const [dayKey, setDayKey] = useState(() => toLocalDateKey(new Date()))
   const [pendingDelete, setPendingDelete] = useState<SleepSession | null>(null)
+  const [pendingStart, setPendingStart] = useState<SleepKind | null>(null)
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
@@ -45,8 +46,71 @@ export function SleepPage({ activeBaby, onOpenSettings }: SleepPageProps) {
     return () => window.clearInterval(id)
   }, [sleep.activeTimer])
 
-  const daySessions = useMemo(() => sleep.forDay(dayKey), [sleep, dayKey])
-  const dayTotalMs = useMemo(() => sleep.totalForDay(dayKey), [sleep, dayKey])
+  useEffect(() => {
+    const timer = sleep.activeTimer
+    if (!timer) {
+      document.title = 'Baby Care'
+      return
+    }
+
+    const tick = () => {
+      const ms = timerElapsedMs(timer, Date.now())
+      const status = timer.pausedAt ? 'пауза' : 'сон'
+      document.title = `${formatTimerClock(ms)} · ${status}`
+    }
+
+    tick()
+    const id = window.setInterval(tick, 1000)
+    return () => {
+      window.clearInterval(id)
+      document.title = 'Baby Care'
+    }
+  }, [sleep.activeTimer])
+
+  useEffect(() => {
+    const timer = sleep.activeTimer
+    if (!timer || timer.pausedAt) {
+      return
+    }
+
+    let wakeLock: WakeLockSentinel | null = null
+    let cancelled = false
+
+    const requestLock = async () => {
+      try {
+        if (!('wakeLock' in navigator)) {
+          return
+        }
+        wakeLock = await navigator.wakeLock.request('screen')
+      } catch {
+        // Browser may deny wake lock — ignore.
+      }
+    }
+
+    void requestLock()
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible' && !cancelled) {
+        void requestLock()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+
+    return () => {
+      cancelled = true
+      document.removeEventListener('visibilitychange', onVisibility)
+      void wakeLock?.release()
+    }
+  }, [sleep.activeTimer])
+
+  const daySessions = useMemo(
+    () => sleep.forDay(dayKey),
+    [sleep.forDay, dayKey, sleep.sessions],
+  )
+  const dayTotalMs = useMemo(
+    () => sleep.totalForDay(dayKey),
+    [sleep.totalForDay, dayKey, sleep.sessions],
+  )
   const todayKey = toLocalDateKey(new Date())
 
   if (!activeBaby) {
@@ -100,6 +164,16 @@ export function SleepPage({ activeBaby, onOpenSettings }: SleepPageProps) {
   const elapsed = timer ? timerElapsedMs(timer, now) : 0
   const isPaused = Boolean(timer?.pausedAt)
 
+  const handleStop = () => {
+    const startedAt = timer?.startedAt
+    sleep.stop()
+    if (startedAt) {
+      setDayKey(toLocalDateKey(new Date(startedAt)))
+    } else {
+      setDayKey(toLocalDateKey(new Date()))
+    }
+  }
+
   return (
     <div className="page sleep-page">
       <header className="page-hero">
@@ -124,7 +198,7 @@ export function SleepPage({ activeBaby, onOpenSettings }: SleepPageProps) {
                 Пауза
               </button>
             )}
-            <button type="button" className="btn btn--primary" onClick={sleep.stop}>
+            <button type="button" className="btn btn--primary" onClick={handleStop}>
               Завершить
             </button>
           </div>
@@ -134,7 +208,7 @@ export function SleepPage({ activeBaby, onOpenSettings }: SleepPageProps) {
           <button
             type="button"
             className="sleep-start sleep-start--day"
-            onClick={() => sleep.start('day')}
+            onClick={() => setPendingStart('day')}
           >
             <span className="sleep-start__label">Дневной сон</span>
             <span className="sleep-start__hint">Запустить таймер</span>
@@ -142,7 +216,7 @@ export function SleepPage({ activeBaby, onOpenSettings }: SleepPageProps) {
           <button
             type="button"
             className="sleep-start sleep-start--night"
-            onClick={() => sleep.start('night')}
+            onClick={() => setPendingStart('night')}
           >
             <span className="sleep-start__label">Ночной сон</span>
             <span className="sleep-start__hint">Запустить таймер</span>
@@ -223,6 +297,23 @@ export function SleepPage({ activeBaby, onOpenSettings }: SleepPageProps) {
           </ul>
         )}
       </section>
+
+      <ConfirmDialog
+        open={pendingStart !== null}
+        title={
+          pendingStart === 'night' ? 'Начать ночной сон?' : 'Начать дневной сон?'
+        }
+        message="Таймер начнёт отсчёт прямо сейчас. Его можно поставить на паузу или завершить."
+        confirmLabel="Начать"
+        cancelLabel="Отмена"
+        onCancel={() => setPendingStart(null)}
+        onConfirm={() => {
+          if (pendingStart) {
+            sleep.start(pendingStart)
+          }
+          setPendingStart(null)
+        }}
+      />
 
       <ConfirmDialog
         open={pendingDelete !== null}

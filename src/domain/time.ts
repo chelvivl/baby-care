@@ -80,7 +80,12 @@ export function formatDateTimeShortRu(iso: string): string {
 }
 
 export function formatDurationRu(ms: number): string {
-  const totalMinutes = Math.max(0, Math.floor(ms / 60_000))
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
+  if (totalSeconds < 60) {
+    return `${Math.max(totalSeconds, 1)} сек`
+  }
+
+  const totalMinutes = Math.floor(totalSeconds / 60)
   const hours = Math.floor(totalMinutes / 60)
   const minutes = totalMinutes % 60
 

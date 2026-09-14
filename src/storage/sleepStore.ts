@@ -101,7 +101,8 @@ export function stopTimer(state: SleepState, now = new Date()): SleepState {
     elapsed += Math.max(0, now.getTime() - new Date(timer.segmentStartedAt).getTime())
   }
 
-  if (elapsed < 30_000) {
+  // Keep even short sessions — silent drop was confusing while testing.
+  if (elapsed < 1_000) {
     return { ...state, activeTimer: null }
   }
 

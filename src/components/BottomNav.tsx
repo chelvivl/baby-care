@@ -6,11 +6,75 @@ type BottomNavProps = {
   onChange: (tab: AppTab) => void
 }
 
-const icons: Record<AppTab, string> = {
-  home: '◎',
-  sleep: '☾',
-  feeding: '◔',
-  settings: '⚙',
+function TabIcon({ tab }: { tab: AppTab }) {
+  if (tab === 'home') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M4.5 10.8 12 4.5l7.5 6.3V19a1.5 1.5 0 0 1-1.5 1.5h-3.2v-5.1h-5.6V20.5H6A1.5 1.5 0 0 1 4.5 19v-8.2Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  }
+
+  if (tab === 'sleep') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M14.2 4.4A7.8 7.8 0 1 0 19.6 14 6.4 6.4 0 0 1 14.2 4.4Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  }
+
+  if (tab === 'feeding') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M8 4.5v6.2a4 4 0 0 0 8 0V4.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+        />
+        <path
+          d="M12 14.7V19.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+        />
+        <path
+          d="M9 19.5h6"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+        />
+      </svg>
+    )
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.1" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <path
+        d="M12 3.6v2.2M12 18.2v2.2M3.6 12h2.2M18.2 12h2.2M6.1 6.1l1.6 1.6M16.3 16.3l1.6 1.6M17.9 6.1l-1.6 1.6M7.7 16.3l-1.6 1.6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
 }
 
 export function BottomNav({ active, onChange }: BottomNavProps) {
@@ -65,8 +129,8 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
               aria-current={isActive ? 'page' : undefined}
               onClick={() => onChange(tab)}
             >
-              <span className="bottom-nav__icon" aria-hidden="true">
-                {icons[tab]}
+              <span className="bottom-nav__icon">
+                <TabIcon tab={tab} />
               </span>
               <span className="bottom-nav__label">{TAB_LABELS[tab]}</span>
             </button>

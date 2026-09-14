@@ -29,89 +29,84 @@ export function HomePage({ activeBaby, onOpenSettings }: HomePageProps) {
 
   return (
     <div className="page home-page">
-      <header className="home-page__header">
-        <p className="home-page__date">{today}</p>
-        <h1 className="home-page__brand">Baby Care</h1>
+      <header className="page-hero home-page__hero">
+        <p className="page-hero__kicker">{today}</p>
+        <h1 className="page-hero__brand">Baby Care</h1>
       </header>
 
       {activeBaby ? (
-        <AgeCard baby={activeBaby} now={now} />
+        <AgeHero baby={activeBaby} now={now} />
       ) : (
-        <section className="age-empty">
-          <p className="age-empty__title">Добавьте малыша</p>
-          <p className="age-empty__text">
-            Укажите имя и дату рождения в настройках — здесь появится подробный возраст.
+        <section className="empty-state">
+          <p className="empty-state__title">Кто ваш малыш?</p>
+          <p className="empty-state__text">
+            Добавьте имя и дату рождения — покажем точный возраст до часов и минут.
           </p>
           <button type="button" className="btn btn--primary" onClick={onOpenSettings}>
-            Открыть настройки
+            Добавить малыша
           </button>
         </section>
       )}
 
-      <section className="home-page__summary" aria-label="Сводка за сегодня">
-        <article className="stat-tile">
-          <span className="stat-tile__label">Сон</span>
-          <span className="stat-tile__value">—</span>
-          <span className="stat-tile__hint">записей пока нет</span>
+      <section className="pulse" aria-label="Сводка за сегодня">
+        <article className="pulse__tile">
+          <span className="pulse__label">Сон</span>
+          <span className="pulse__value">—</span>
+          <span className="pulse__hint">скоро</span>
         </article>
-        <article className="stat-tile">
-          <span className="stat-tile__label">Кормление</span>
-          <span className="stat-tile__value">—</span>
-          <span className="stat-tile__hint">записей пока нет</span>
+        <article className="pulse__tile">
+          <span className="pulse__label">Кормление</span>
+          <span className="pulse__value">—</span>
+          <span className="pulse__hint">скоро</span>
         </article>
-      </section>
-
-      <section className="home-page__actions" aria-label="Быстрые действия">
-        <button type="button" className="action-chip" disabled>
-          Начать сон
-        </button>
-        <button type="button" className="action-chip" disabled>
-          Записать кормление
-        </button>
       </section>
     </div>
   )
 }
 
-function AgeCard({ baby, now }: { baby: Baby; now: Date }) {
+function AgeHero({ baby, now }: { baby: Baby; now: Date }) {
   const age = calculateAge(baby.birthDate, now)
   const weeksLine = formatWeeksAge(age)
 
   return (
-    <section className="age-card" aria-label={`Возраст: ${baby.name}`}>
-      <p className="age-card__eyebrow">Сейчас</p>
-      <h2 className="age-card__name">{baby.name}</h2>
-      <p className="age-card__primary">{formatCalendarAge(age)}</p>
-      {weeksLine ? <p className="age-card__weeks">или {weeksLine}</p> : null}
+    <section className="age-hero" aria-label={`Возраст: ${baby.name}`}>
+      <div className="age-hero__top">
+        <p className="age-hero__label">Сейчас</p>
+        <h2 className="age-hero__name">{baby.name}</h2>
+        <p className="age-hero__age">{formatCalendarAge(age)}</p>
+        {weeksLine ? <p className="age-hero__alt">{weeksLine}</p> : null}
+      </div>
 
       {!age.isFuture ? (
-        <dl className="age-grid">
-          <div className="age-grid__item">
-            <dt>Всего дней</dt>
-            <dd>{age.totalDays.toLocaleString('ru-RU')}</dd>
+        <div className="metrics" role="list">
+          <div className="metrics__item" role="listitem">
+            <span className="metrics__value">{age.totalDays.toLocaleString('ru-RU')}</span>
+            <span className="metrics__label">дней</span>
           </div>
-          <div className="age-grid__item">
-            <dt>Недель</dt>
-            <dd>
+          <div className="metrics__item" role="listitem">
+            <span className="metrics__value">
               {age.totalWeeks}
-              {age.weekDays > 0 ? `+${age.weekDays}` : ''}
-            </dd>
+              {age.weekDays > 0 ? (
+                <span className="metrics__frac">+{age.weekDays}</span>
+              ) : null}
+            </span>
+            <span className="metrics__label">недель</span>
           </div>
-          <div className="age-grid__item">
-            <dt>Часов</dt>
-            <dd>{age.totalHours.toLocaleString('ru-RU')}</dd>
+          <div className="metrics__item" role="listitem">
+            <span className="metrics__value">{age.totalHours.toLocaleString('ru-RU')}</span>
+            <span className="metrics__label">часов</span>
           </div>
-          <div className="age-grid__item">
-            <dt>Минут</dt>
-            <dd>{age.totalMinutes.toLocaleString('ru-RU')}</dd>
+          <div className="metrics__item" role="listitem">
+            <span className="metrics__value">{age.totalMinutes.toLocaleString('ru-RU')}</span>
+            <span className="metrics__label">минут</span>
           </div>
-        </dl>
+        </div>
       ) : null}
 
-      <p className="age-card__birth">
+      <p className="age-hero__foot">
         {age.isToday
           ? 'День рождения сегодня'
-          : `Дата рождения: ${formatBirthDateRu(baby.birthDate)}`}
+          : `Родился ${formatBirthDateRu(baby.birthDate)}`}
         {!age.isFuture && !age.isToday
           ? ` · ${unitRu(age.totalDays, ['полный день', 'полных дня', 'полных дней'])}`
           : ''}

@@ -74,95 +74,110 @@ export function SettingsPage({
 
   return (
     <div className="page settings-page">
-      <header className="settings-page__header">
-        <h1 className="settings-page__title">Настройки</h1>
-        <p className="settings-page__lead">
-          Добавьте малышей — имя и дату рождения. На вкладке «Сегодня» будет точный возраст.
-        </p>
+      <header className="page-hero">
+        <p className="page-hero__kicker">Профили</p>
+        <h1 className="page-hero__title">Настройки</h1>
       </header>
 
-      <form className="baby-form" onSubmit={handleSubmit}>
-        <h2 className="baby-form__title">
-          {isEditing ? 'Редактировать' : 'Новый малыш'}
-        </h2>
+      <form className="composer" onSubmit={handleSubmit}>
+        <div className="composer__head">
+          <h2 className="composer__title">
+            {isEditing ? 'Редактирование' : 'Добавить малыша'}
+          </h2>
+          <p className="composer__hint">Имя и дата рождения — остальное посчитаем сами</p>
+        </div>
 
-        <label className="field">
-          <span className="field__label">Имя</span>
-          <input
-            className="field__input"
-            type="text"
-            name="name"
-            autoComplete="off"
-            enterKeyHint="next"
-            maxLength={40}
-            placeholder="Например, Миша"
-            value={form.name}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, name: event.target.value }))
-            }
-          />
-        </label>
+        <div className="composer__fields">
+          <label className="field">
+            <span className="field__label">Имя</span>
+            <input
+              className="field__input"
+              type="text"
+              name="name"
+              autoComplete="off"
+              enterKeyHint="next"
+              maxLength={40}
+              placeholder="Самуил"
+              value={form.name}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, name: event.target.value }))
+              }
+            />
+          </label>
 
-        <label className="field">
-          <span className="field__label">Дата рождения</span>
-          <input
-            className="field__input"
-            type="date"
-            name="birthDate"
-            max={todayIso}
-            value={form.birthDate}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, birthDate: event.target.value }))
-            }
-          />
-        </label>
+          <label className="field">
+            <span className="field__label">Дата рождения</span>
+            <input
+              className="field__input"
+              type="date"
+              name="birthDate"
+              max={todayIso}
+              value={form.birthDate}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, birthDate: event.target.value }))
+              }
+            />
+          </label>
+        </div>
 
-        {error ? <p className="baby-form__error">{error}</p> : null}
+        {error ? <p className="composer__error">{error}</p> : null}
 
-        <div className="baby-form__actions">
-          <button type="submit" className="btn btn--primary">
+        <div className="composer__actions">
+          <button type="submit" className="btn btn--primary btn--block">
             {isEditing ? 'Сохранить' : 'Добавить'}
           </button>
           {isEditing ? (
-            <button type="button" className="btn btn--ghost" onClick={resetForm}>
+            <button type="button" className="btn btn--quiet" onClick={resetForm}>
               Отмена
             </button>
           ) : null}
         </div>
       </form>
 
-      <section className="baby-list" aria-label="Список малышей">
-        <h2 className="baby-list__title">Малыши</h2>
+      <section className="roster" aria-label="Список малышей">
+        <div className="roster__head">
+          <h2 className="roster__title">Малыши</h2>
+          <span className="roster__count">{babies.length}</span>
+        </div>
+
         {babies.length === 0 ? (
-          <p className="baby-list__empty">Пока никого нет — добавьте первого выше.</p>
+          <p className="roster__empty">Список пуст — добавьте первого выше.</p>
         ) : (
-          <ul className="baby-list__items">
+          <ul className="roster__list">
             {babies.map((baby) => {
               const isActive = baby.id === activeBabyId
               return (
-                <li key={baby.id} className="baby-card">
+                <li
+                  key={baby.id}
+                  className={`roster__item${isActive ? ' roster__item--active' : ''}`}
+                >
                   <button
                     type="button"
-                    className={`baby-card__select${isActive ? ' baby-card__select--active' : ''}`}
+                    className="roster__main"
                     onClick={() => onSelect(baby.id)}
                   >
-                    <span className="baby-card__name">{baby.name}</span>
-                    <span className="baby-card__meta">
-                      {formatBirthDateRu(baby.birthDate)}
-                      {isActive ? ' · активный' : ''}
+                    <span className="roster__avatar" aria-hidden="true">
+                      {baby.name.trim().charAt(0).toUpperCase() || '?'}
                     </span>
+                    <span className="roster__copy">
+                      <span className="roster__name">{baby.name}</span>
+                      <span className="roster__meta">
+                        {formatBirthDateRu(baby.birthDate)}
+                      </span>
+                    </span>
+                    {isActive ? <span className="roster__badge">активный</span> : null}
                   </button>
-                  <div className="baby-card__actions">
+                  <div className="roster__tools">
                     <button
                       type="button"
-                      className="btn btn--ghost btn--compact"
+                      className="text-action"
                       onClick={() => startEdit(baby)}
                     >
                       Изменить
                     </button>
                     <button
                       type="button"
-                      className="btn btn--danger btn--compact"
+                      className="text-action text-action--danger"
                       onClick={() => {
                         if (window.confirm(`Удалить профиль «${baby.name}»?`)) {
                           if (editingId === baby.id) {
@@ -189,5 +204,4 @@ function toLocalIsoDate(date: Date): string {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
+  return `${year}-${month}-${day}`}

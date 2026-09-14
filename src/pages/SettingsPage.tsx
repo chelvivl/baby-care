@@ -230,7 +230,7 @@ function FeedingSettingsCard({
         кормлении.
       </p>
 
-      <form className="composer settings-block__form" onSubmit={handleSubmit}>
+      <form className="composer settings-block__form" onSubmit={handleSubmit} noValidate>
         <div className="composer__fields">
           <label className="field">
             <span className="field__label">Объём по умолчанию, мл</span>
@@ -240,7 +240,7 @@ function FeedingSettingsCard({
               inputMode="numeric"
               min={1}
               max={1000}
-              step={5}
+              step="any"
               value={defaultAmountMl}
               onChange={(event) => setDefaultAmountMl(event.target.value)}
             />
@@ -253,7 +253,7 @@ function FeedingSettingsCard({
               inputMode="decimal"
               min={0.5}
               max={24}
-              step={0.5}
+              step="any"
               value={intervalHours}
               onChange={(event) => setIntervalHours(event.target.value)}
             />
@@ -266,7 +266,7 @@ function FeedingSettingsCard({
               inputMode="numeric"
               min={0}
               max={180}
-              step={5}
+              step="any"
               value={notifyBeforeMinutes}
               onChange={(event) => setNotifyBeforeMinutes(event.target.value)}
             />

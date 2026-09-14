@@ -173,7 +173,7 @@ export function FeedingPage({ activeBaby, onOpenSettings }: FeedingPageProps) {
             inputMode="numeric"
             min={1}
             max={1000}
-            step={5}
+            step="any"
             value={quickAmount}
             onChange={(event) => setQuickAmount(event.target.value)}
           />
@@ -366,7 +366,7 @@ function FeedingForm({
         <p className="form-page__lead">Что дали, сколько и когда</p>
       </header>
 
-      <form className="composer" onSubmit={handleSubmit}>
+      <form className="composer" onSubmit={handleSubmit} noValidate>
         <div className="kind-switch" role="group" aria-label="Что дали">
           <button
             type="button"
@@ -402,7 +402,7 @@ function FeedingForm({
               inputMode="numeric"
               min={1}
               max={1000}
-              step={5}
+              step="any"
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
             />

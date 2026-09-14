@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 type ConfirmDialogProps = {
   open: boolean
@@ -26,6 +27,9 @@ export function ConfirmDialog({
       return
     }
 
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onCancel()
@@ -33,47 +37,52 @@ export function ConfirmDialog({
     }
 
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', onKeyDown)
+    }
   }, [open, onCancel])
 
-  if (!open) {
+  if (!open || typeof document === 'undefined') {
     return null
   }
 
-  return (
-    <div className="dialog-root" role="presentation">
+  return createPortal(
+    <div className="sheet-root" role="presentation">
       <button
         type="button"
-        className="dialog-backdrop"
+        className="sheet-backdrop"
         aria-label="Закрыть"
         onClick={onCancel}
       />
       <div
-        className="dialog"
+        className="sheet"
         role="alertdialog"
         aria-modal="true"
-        aria-labelledby="confirm-dialog-title"
-        aria-describedby="confirm-dialog-desc"
+        aria-labelledby="confirm-sheet-title"
+        aria-describedby="confirm-sheet-desc"
       >
-        <h2 id="confirm-dialog-title" className="dialog__title">
+        <div className="sheet__handle" aria-hidden="true" />
+        <h2 id="confirm-sheet-title" className="sheet__title">
           {title}
         </h2>
-        <p id="confirm-dialog-desc" className="dialog__text">
+        <p id="confirm-sheet-desc" className="sheet__text">
           {message}
         </p>
-        <div className="dialog__actions">
-          <button type="button" className="btn btn--secondary" onClick={onCancel}>
-            {cancelLabel}
-          </button>
+        <div className="sheet__actions">
           <button
             type="button"
-            className={`btn ${danger ? 'btn--danger' : 'btn--primary'}`}
+            className={`sheet__btn ${danger ? 'sheet__btn--danger' : 'sheet__btn--primary'}`}
             onClick={onConfirm}
           >
             {confirmLabel}
           </button>
+          <button type="button" className="sheet__btn sheet__btn--cancel" onClick={onCancel}>
+            {cancelLabel}
+          </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

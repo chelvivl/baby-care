@@ -2,8 +2,6 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type { Baby } from '../domain/baby'
 import {
   SLEEP_KIND_LABELS,
-  sessionDurationMs,
-  sessionPausedMs,
   timerElapsedMs,
   type SleepKind,
   type SleepSession,
@@ -18,8 +16,8 @@ import {
   toDateTimeLocalValue,
   toLocalDateKey,
 } from '../domain/time'
-import { pluralRu } from '../domain/age'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { SleepDayTimeline } from '../components/SleepDayTimeline'
 import { notifySleepStarted } from '../app/notifications'
 import { useSleepContext } from '../hooks/SleepContext'
 
@@ -309,52 +307,20 @@ export function SleepPage({ activeBaby, onOpenSettings }: SleepPageProps) {
             </p>
           </div>
         ) : (
-          <ul className="sleep-history__list">
-            {daySessions.map((session) => {
-              const pausedMs = sessionPausedMs(session)
-              const pauseCount = session.pauseCount ?? 0
-              return (
-                <li key={session.id} className="sleep-item">
-                  <div className="sleep-item__main">
-                    <span className={`sleep-item__badge sleep-item__badge--${session.kind}`}>
-                      {SLEEP_KIND_LABELS[session.kind]}
-                    </span>
-                    <p className="sleep-item__duration">
-                      Спал {formatDurationRu(sessionDurationMs(session))}
-                    </p>
-                    <p className="sleep-item__range">
-                      {formatTimeRu(session.startAt)} – {formatTimeRu(session.endAt)}
-                      {session.source === 'manual' ? ' · вручную' : ''}
-                    </p>
-                    {pausedMs > 0 || pauseCount > 0 ? (
-                      <p className="sleep-item__pause">
-                        Просыпался {formatDurationRu(pausedMs)}
-                        {pauseCount > 0
-                          ? ` · ${pauseCount} ${pluralRu(pauseCount, 'пауза', 'паузы', 'пауз')}`
-                          : ''}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div className="sleep-item__tools">
-                    <button
-                      type="button"
-                      className="text-action"
-                      onClick={() => setView({ kind: 'edit', session })}
-                    >
-                      Изменить
-                    </button>
-                    <button
-                      type="button"
-                      className="text-action text-action--danger"
-                      onClick={() => setPendingDelete(session)}
-                    >
-                      Удалить
-                    </button>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
+          <SleepDayTimeline
+            sessions={daySessions}
+            awakeUntilNowMs={
+              dayKey === todayKey && daySessions.length > 0
+                ? Math.max(
+                    0,
+                    Date.now() -
+                      new Date(daySessions[daySessions.length - 1].endAt).getTime(),
+                  )
+                : null
+            }
+            onEdit={(session) => setView({ kind: 'edit', session })}
+            onDelete={(session) => setPendingDelete(session)}
+          />
         )}
       </section>
 

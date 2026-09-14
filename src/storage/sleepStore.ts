@@ -1,7 +1,9 @@
 import {
   createSleepId,
+  makeSegment,
   type ActiveSleepTimer,
   type SleepKind,
+  type SleepSegment,
   type SleepSession,
   type SleepState,
 } from '../domain/sleep'
@@ -24,7 +26,9 @@ export function loadSleepState(): SleepState {
     const sessions = Array.isArray(parsed.sessions)
       ? parsed.sessions.filter(isSessionLike).map(normalizeSession)
       : []
-    const activeTimer = isActiveTimer(parsed.activeTimer) ? normalizeTimer(parsed.activeTimer) : null
+    const activeTimer = isActiveTimer(parsed.activeTimer)
+      ? normalizeTimer(parsed.activeTimer)
+      : null
     return { sessions, activeTimer }
   } catch {
     return EMPTY
@@ -53,6 +57,7 @@ export function startTimer(
     accumulatedMs: 0,
     pausedMs: 0,
     pauseCount: 0,
+    completedSegments: [],
     pausedAt: null,
   }
 
@@ -65,13 +70,16 @@ export function pauseTimer(state: SleepState, now = new Date()): SleepState {
     return state
   }
 
-  const segmentMs = Math.max(0, now.getTime() - new Date(timer.segmentStartedAt).getTime())
+  const endIso = now.toISOString()
+  const sleepSegment = makeSegment('sleep', timer.segmentStartedAt, endIso)
+
   return {
     ...state,
     activeTimer: {
       ...timer,
-      accumulatedMs: timer.accumulatedMs + segmentMs,
-      pausedAt: now.toISOString(),
+      accumulatedMs: timer.accumulatedMs + sleepSegment.durationMs,
+      completedSegments: [...timer.completedSegments, sleepSegment],
+      pausedAt: endIso,
     },
   }
 }
@@ -82,15 +90,18 @@ export function resumeTimer(state: SleepState, now = new Date()): SleepState {
     return state
   }
 
-  const pauseSegmentMs = Math.max(0, now.getTime() - new Date(timer.pausedAt).getTime())
+  const endIso = now.toISOString()
+  const pauseSegment = makeSegment('pause', timer.pausedAt, endIso)
+
   return {
     ...state,
     activeTimer: {
       ...timer,
-      pausedMs: timer.pausedMs + pauseSegmentMs,
+      pausedMs: timer.pausedMs + pauseSegment.durationMs,
       pauseCount: timer.pauseCount + 1,
+      completedSegments: [...timer.completedSegments, pauseSegment],
       pausedAt: null,
-      segmentStartedAt: now.toISOString(),
+      segmentStartedAt: endIso,
     },
   }
 }
@@ -101,15 +112,21 @@ export function stopTimer(state: SleepState, now = new Date()): SleepState {
     return state
   }
 
+  const endIso = now.toISOString()
+  let segments = [...timer.completedSegments]
   let sleepMs = timer.accumulatedMs
   let pausedMs = timer.pausedMs
   let pauseCount = timer.pauseCount
 
   if (timer.pausedAt) {
-    pausedMs += Math.max(0, now.getTime() - new Date(timer.pausedAt).getTime())
+    const pauseSegment = makeSegment('pause', timer.pausedAt, endIso)
+    segments = [...segments, pauseSegment]
+    pausedMs += pauseSegment.durationMs
     pauseCount += 1
   } else {
-    sleepMs += Math.max(0, now.getTime() - new Date(timer.segmentStartedAt).getTime())
+    const sleepSegment = makeSegment('sleep', timer.segmentStartedAt, endIso)
+    segments = [...segments, sleepSegment]
+    sleepMs += sleepSegment.durationMs
   }
 
   if (sleepMs < 1_000 && pausedMs < 1_000) {
@@ -121,12 +138,13 @@ export function stopTimer(state: SleepState, now = new Date()): SleepState {
     babyId: timer.babyId,
     kind: timer.kind,
     startAt: timer.startedAt,
-    endAt: now.toISOString(),
+    endAt: endIso,
     durationMs: sleepMs,
     pausedMs,
     pauseCount,
+    segments,
     source: 'timer',
-    createdAt: now.toISOString(),
+    createdAt: endIso,
   }
 
   return {
@@ -144,10 +162,7 @@ export function addManualSession(
     endAt: string
   },
 ): SleepState {
-  const durationMs = Math.max(
-    0,
-    new Date(input.endAt).getTime() - new Date(input.startAt).getTime(),
-  )
+  const segment = makeSegment('sleep', input.startAt, input.endAt)
 
   const session: SleepSession = {
     id: createSleepId(),
@@ -155,9 +170,10 @@ export function addManualSession(
     kind: input.kind,
     startAt: input.startAt,
     endAt: input.endAt,
-    durationMs,
+    durationMs: segment.durationMs,
     pausedMs: 0,
     pauseCount: 0,
+    segments: [segment],
     source: 'manual',
     createdAt: new Date().toISOString(),
   }
@@ -177,10 +193,7 @@ export function updateSession(
     endAt: string
   },
 ): SleepState {
-  const durationMs = Math.max(
-    0,
-    new Date(input.endAt).getTime() - new Date(input.startAt).getTime(),
-  )
+  const segment = makeSegment('sleep', input.startAt, input.endAt)
 
   return {
     ...state,
@@ -191,10 +204,10 @@ export function updateSession(
             kind: input.kind,
             startAt: input.startAt,
             endAt: input.endAt,
-            durationMs,
-            // Manual edit resets pause stats — wall span is the sleep length.
+            durationMs: segment.durationMs,
             pausedMs: 0,
             pauseCount: 0,
+            segments: [segment],
             source: session.source === 'timer' ? 'manual' : session.source,
           }
         : session,
@@ -218,7 +231,7 @@ export function sessionsForBabyDay(
     .filter((session) => session.babyId === babyId)
     .filter((session) => toLocalDateKey(new Date(session.startAt)) === dayKey)
     .sort(
-      (a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime(),
+      (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
     )
 }
 
@@ -251,6 +264,10 @@ function isSessionLike(value: unknown): value is SleepSession {
 }
 
 function normalizeSession(session: SleepSession): SleepSession {
+  const pausedMs = typeof session.pausedMs === 'number' ? session.pausedMs : 0
+  const pauseCount = typeof session.pauseCount === 'number' ? session.pauseCount : 0
+  const segments = normalizeSegments(session.segments, session)
+
   return {
     id: session.id,
     babyId: session.babyId,
@@ -258,11 +275,43 @@ function normalizeSession(session: SleepSession): SleepSession {
     startAt: session.startAt,
     endAt: session.endAt,
     durationMs: session.durationMs,
-    pausedMs: typeof session.pausedMs === 'number' ? session.pausedMs : 0,
-    pauseCount: typeof session.pauseCount === 'number' ? session.pauseCount : 0,
+    pausedMs,
+    pauseCount,
+    segments,
     source: session.source,
     createdAt: session.createdAt,
   }
+}
+
+function normalizeSegments(
+  value: unknown,
+  session: SleepSession,
+): SleepSegment[] {
+  if (Array.isArray(value) && value.length > 0) {
+    return value.filter(isSegment).map((segment) => ({
+      kind: segment.kind,
+      startAt: segment.startAt,
+      endAt: segment.endAt,
+      durationMs: Math.max(0, segment.durationMs),
+    }))
+  }
+
+  return [
+    makeSegment('sleep', session.startAt, session.endAt),
+  ]
+}
+
+function isSegment(value: unknown): value is SleepSegment {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+  const segment = value as SleepSegment
+  return (
+    (segment.kind === 'sleep' || segment.kind === 'pause') &&
+    typeof segment.startAt === 'string' &&
+    typeof segment.endAt === 'string' &&
+    typeof segment.durationMs === 'number'
+  )
 }
 
 function isActiveTimer(value: unknown): value is ActiveSleepTimer {
@@ -281,6 +330,10 @@ function isActiveTimer(value: unknown): value is ActiveSleepTimer {
 }
 
 function normalizeTimer(timer: ActiveSleepTimer): ActiveSleepTimer {
+  const completedSegments = Array.isArray(timer.completedSegments)
+    ? timer.completedSegments.filter(isSegment)
+    : []
+
   return {
     babyId: timer.babyId,
     kind: timer.kind,
@@ -289,6 +342,7 @@ function normalizeTimer(timer: ActiveSleepTimer): ActiveSleepTimer {
     accumulatedMs: timer.accumulatedMs,
     pausedMs: typeof timer.pausedMs === 'number' ? timer.pausedMs : 0,
     pauseCount: typeof timer.pauseCount === 'number' ? timer.pauseCount : 0,
+    completedSegments,
     pausedAt: timer.pausedAt,
   }
 }

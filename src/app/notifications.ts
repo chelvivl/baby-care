@@ -1,4 +1,5 @@
 import { SLEEP_KIND_LABELS, type SleepKind } from '../domain/sleep'
+import { formatTimeRu } from '../domain/time'
 
 export function notificationsSupported(): boolean {
   return typeof window !== 'undefined' && 'Notification' in window
@@ -17,6 +18,7 @@ export async function ensureNotificationPermission(): Promise<NotificationPermis
 export async function notifySleepStarted(
   kind: SleepKind,
   babyName?: string | null,
+  startedAt: Date = new Date(),
 ): Promise<void> {
   if (!notificationsSupported()) {
     return
@@ -27,10 +29,12 @@ export async function notifySleepStarted(
     return
   }
 
-  const title = `${SLEEP_KIND_LABELS[kind]} сон начался`
+  const time = formatTimeRu(startedAt.toISOString())
+  const kindLabel = SLEEP_KIND_LABELS[kind].toLowerCase()
+  const title = `${SLEEP_KIND_LABELS[kind]} сон`
   const body = babyName
-    ? `${babyName}: таймер запущен`
-    : 'Таймер сна запущен'
+    ? `${babyName}: ${kindLabel} сон начался в ${time}`
+    : `${SLEEP_KIND_LABELS[kind]} сон начался в ${time}`
 
   const icon = `${import.meta.env.BASE_URL}apple-touch-icon.svg`
 

@@ -21,8 +21,8 @@ export default defineConfig({
         display: 'standalone',
         display_override: ['standalone', 'fullscreen'],
         orientation: 'portrait',
-        theme_color: '#eef3f7',
-        background_color: '#eef3f7',
+        theme_color: '#e8eef2',
+        background_color: '#e8eef2',
         categories: ['lifestyle', 'health'],
         icons: [
           {

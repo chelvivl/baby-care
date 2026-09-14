@@ -110,7 +110,7 @@ textarea,
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   padding: 0 var(--page-padding-x)
-    calc(var(--nav-cloud-height) + var(--safe-bottom) + 1.1rem);
+    calc(var(--nav-cloud-height) + 1.25rem);
 }
 
 .app-shell__veil {
@@ -1519,31 +1519,35 @@ button.pulse__tile {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  /*
+   * iOS standalone: fixed bottom:0 often sits ABOVE the home-indicator band,
+   * leaving a naked gray strip painted by the page background. Pull the bar
+   * down into that band so frost covers it — no empty strip under the pill.
+   */
+  bottom: calc(0px - var(--safe-bottom));
   z-index: 30;
   pointer-events: none;
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  /* Pill sits low; safe-area stays BELOW it as frost, not inside the pill height. */
-  padding: 1.15rem var(--page-padding-x) 0.35rem;
+  padding: 1.15rem var(--page-padding-x) 0.5rem;
   background: transparent;
 }
 
-/* Full-bleed frost like the top veil — covers under-pill gap + home indicator. */
+/* Same idea as the top veil: frost to the physical screen edge. */
 .bottom-nav::before {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: calc(var(--nav-cloud-height) + var(--safe-bottom) + 1.5rem);
+  top: 0;
   pointer-events: none;
   z-index: 0;
   background: linear-gradient(
     to top,
-    rgba(232, 238, 242, 0.94) 0%,
-    rgba(232, 238, 242, 0.72) 55%,
+    rgba(232, 238, 242, 0.9) 0%,
+    rgba(232, 238, 242, 0.55) 55%,
     rgba(232, 238, 242, 0) 100%
   );
   backdrop-filter: blur(18px) saturate(1.35);
@@ -1562,8 +1566,7 @@ button.pulse__tile {
   gap: 0.1rem;
   width: min(100%, 26rem);
   min-height: var(--nav-cloud-height);
-  /* Sit low near the screen edge; under-pill strip is frost (safe-area), not empty gray. */
-  margin-bottom: 0.35rem;
+  margin: 0;
   padding: 0.32rem;
   border-radius: 1.55rem;
   background: rgba(255, 255, 255, 0.94);

@@ -111,7 +111,7 @@ textarea,
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   padding: calc(0.7rem + var(--safe-top)) var(--page-padding-x)
-    calc(var(--nav-cloud-height) + var(--nav-float-gap) + var(--safe-bottom) + 1.35rem);
+    calc(var(--nav-cloud-height) + var(--safe-bottom) + 0.9rem);
 }
 
 .app-shell__pane {
@@ -1471,7 +1471,8 @@ button.pulse__tile {
   bottom: 0;
   z-index: 30;
   pointer-events: none;
-  padding: 0 var(--page-padding-x) calc(var(--nav-float-gap) + var(--safe-bottom));
+  /* Only a small float — NOT safe-bottom. Safe-area lives inside the pill. */
+  padding: 0 var(--page-padding-x) 0.45rem;
   display: flex;
   justify-content: center;
 }
@@ -1486,6 +1487,8 @@ button.pulse__tile {
   width: min(100%, 26rem);
   min-height: var(--nav-cloud-height);
   padding: 0.32rem;
+  /* Home indicator zone is inside the white pill, not empty gray under it. */
+  padding-bottom: calc(0.32rem + var(--safe-bottom));
   border-radius: 1.55rem;
   background: rgba(255, 255, 255, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.75);
@@ -1499,7 +1502,7 @@ button.pulse__tile {
 .bottom-nav__indicator {
   position: absolute;
   top: 0.32rem;
-  bottom: 0.32rem;
+  bottom: calc(0.32rem + var(--safe-bottom));
   left: 0;
   border-radius: 1.2rem;
   background: rgba(15, 118, 110, 0.12);

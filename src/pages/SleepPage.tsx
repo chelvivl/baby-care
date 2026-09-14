@@ -18,6 +18,7 @@ import {
   toLocalDateKey,
 } from '../domain/time'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { notifySleepStarted } from '../app/notifications'
 import { useSleepContext } from '../hooks/SleepContext'
 
 type SleepPageProps = {
@@ -308,10 +309,14 @@ export function SleepPage({ activeBaby, onOpenSettings }: SleepPageProps) {
         cancelLabel="Отмена"
         onCancel={() => setPendingStart(null)}
         onConfirm={() => {
-          if (pendingStart) {
-            sleep.start(pendingStart)
+          if (!pendingStart) {
+            setPendingStart(null)
+            return
           }
+          const kind = pendingStart
           setPendingStart(null)
+          sleep.start(kind)
+          void notifySleepStarted(kind, activeBaby.name)
         }}
       />
 

@@ -12,16 +12,22 @@ type HomePageProps = {
   activeBaby: Baby | null
   todaySleepLabel: string | null
   sleepInProgress: boolean
+  todayFeedingLabel: string | null
+  feedingHint: string
   onOpenSettings: () => void
   onOpenSleep: () => void
+  onOpenFeeding: () => void
 }
 
 export function HomePage({
   activeBaby,
   todaySleepLabel,
   sleepInProgress,
+  todayFeedingLabel,
+  feedingHint,
   onOpenSettings,
   onOpenSleep,
+  onOpenFeeding,
 }: HomePageProps) {
   const [now, setNow] = useState(() => new Date())
 
@@ -65,11 +71,11 @@ export function HomePage({
             {sleepInProgress ? 'сейчас спит' : todaySleepLabel ? 'за сегодня' : 'нет записей'}
           </span>
         </button>
-        <article className="pulse__tile">
+        <button type="button" className="pulse__tile" onClick={onOpenFeeding}>
           <span className="pulse__label">Кормление</span>
-          <span className="pulse__value">—</span>
-          <span className="pulse__hint">скоро</span>
-        </article>
+          <span className="pulse__value">{todayFeedingLabel ?? '—'}</span>
+          <span className="pulse__hint">{feedingHint}</span>
+        </button>
       </section>
     </div>
   )

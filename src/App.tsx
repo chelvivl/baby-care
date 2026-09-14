@@ -3,10 +3,12 @@ import { TAB_ORDER, type AppTab } from './app/tabs'
 import { BottomNav } from './components/BottomNav'
 import { InstallBanner } from './components/InstallBanner'
 import { useBabies } from './hooks/useBabies'
+import { FeedingProvider, useFeedingContext } from './hooks/FeedingContext'
 import { SleepProvider, useSleepContext } from './hooks/SleepContext'
-import { formatDurationRu, toLocalDateKey } from './domain/time'
+import { formatAmountMl } from './domain/feeding'
+import { formatDurationRu, formatTimeRu, toLocalDateKey } from './domain/time'
+import { FeedingPage } from './pages/FeedingPage'
 import { HomePage } from './pages/HomePage'
-import { PlaceholderPage } from './pages/PlaceholderPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { SleepPage } from './pages/SleepPage'
 
@@ -17,7 +19,10 @@ function AppContent({ babies }: { babies: BabiesApi }) {
   const [direction, setDirection] = useState<'forward' | 'back'>('forward')
   const previousTab = useRef<AppTab>('home')
   const sleep = useSleepContext()
-  const todaySleepMs = sleep.totalForDay(toLocalDateKey(new Date()))
+  const feeding = useFeedingContext()
+  const todayKey = toLocalDateKey(new Date())
+  const todaySleepMs = sleep.totalForDay(todayKey)
+  const todayFeedMl = feeding.totalMlForDay(todayKey)
 
   const handleTabChange = (next: AppTab) => {
     if (next === tab) {
@@ -42,9 +47,9 @@ function AppContent({ babies }: { babies: BabiesApi }) {
     )
   } else if (tab === 'feeding') {
     content = (
-      <PlaceholderPage
-        title="Кормление"
-        description="Здесь будут записи кормлений: время, тип, объём или длительность."
+      <FeedingPage
+        activeBaby={babies.activeBaby}
+        onOpenSettings={() => handleTabChange('settings')}
       />
     )
   } else if (tab === 'settings') {
@@ -59,13 +64,22 @@ function AppContent({ babies }: { babies: BabiesApi }) {
       />
     )
   } else {
+    const lastFed = feeding.latest
+    const feedingValue = todayFeedMl > 0 ? formatAmountMl(todayFeedMl) : null
+    const feedingHint = lastFed
+      ? `последнее ${formatTimeRu(lastFed.fedAt)}`
+      : 'нет записей'
+
     content = (
       <HomePage
         activeBaby={babies.activeBaby}
         todaySleepLabel={todaySleepMs > 0 ? formatDurationRu(todaySleepMs) : null}
         sleepInProgress={Boolean(sleep.activeTimer)}
+        todayFeedingLabel={feedingValue}
+        feedingHint={feedingHint}
         onOpenSettings={() => handleTabChange('settings')}
         onOpenSleep={() => handleTabChange('sleep')}
+        onOpenFeeding={() => handleTabChange('feeding')}
       />
     )
   }
@@ -91,7 +105,12 @@ function App() {
 
   return (
     <SleepProvider babyId={babies.activeBaby?.id ?? null}>
-      <AppContent babies={babies} />
+      <FeedingProvider
+        babyId={babies.activeBaby?.id ?? null}
+        babyName={babies.activeBaby?.name ?? null}
+      >
+        <AppContent babies={babies} />
+      </FeedingProvider>
     </SleepProvider>
   )
 }

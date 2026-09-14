@@ -10,10 +10,19 @@ import {
 
 type HomePageProps = {
   activeBaby: Baby | null
+  todaySleepLabel: string | null
+  sleepInProgress: boolean
   onOpenSettings: () => void
+  onOpenSleep: () => void
 }
 
-export function HomePage({ activeBaby, onOpenSettings }: HomePageProps) {
+export function HomePage({
+  activeBaby,
+  todaySleepLabel,
+  sleepInProgress,
+  onOpenSettings,
+  onOpenSleep,
+}: HomePageProps) {
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
@@ -49,11 +58,13 @@ export function HomePage({ activeBaby, onOpenSettings }: HomePageProps) {
       )}
 
       <section className="pulse" aria-label="Сводка за сегодня">
-        <article className="pulse__tile">
+        <button type="button" className="pulse__tile" onClick={onOpenSleep}>
           <span className="pulse__label">Сон</span>
-          <span className="pulse__value">—</span>
-          <span className="pulse__hint">скоро</span>
-        </article>
+          <span className="pulse__value">{todaySleepLabel ?? '—'}</span>
+          <span className="pulse__hint">
+            {sleepInProgress ? 'сейчас спит' : todaySleepLabel ? 'за сегодня' : 'нет записей'}
+          </span>
+        </button>
         <article className="pulse__tile">
           <span className="pulse__label">Кормление</span>
           <span className="pulse__value">—</span>

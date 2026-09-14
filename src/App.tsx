@@ -3,15 +3,21 @@ import { TAB_ORDER, type AppTab } from './app/tabs'
 import { BottomNav } from './components/BottomNav'
 import { InstallBanner } from './components/InstallBanner'
 import { useBabies } from './hooks/useBabies'
+import { SleepProvider, useSleepContext } from './hooks/SleepContext'
+import { formatDurationRu, toLocalDateKey } from './domain/time'
 import { HomePage } from './pages/HomePage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { SleepPage } from './pages/SleepPage'
 
-function App() {
+type BabiesApi = ReturnType<typeof useBabies>
+
+function AppContent({ babies }: { babies: BabiesApi }) {
   const [tab, setTab] = useState<AppTab>('home')
   const [direction, setDirection] = useState<'forward' | 'back'>('forward')
   const previousTab = useRef<AppTab>('home')
-  const babies = useBabies()
+  const sleep = useSleepContext()
+  const todaySleepMs = sleep.totalForDay(toLocalDateKey(new Date()))
 
   const handleTabChange = (next: AppTab) => {
     if (next === tab) {
@@ -29,9 +35,9 @@ function App() {
 
   if (tab === 'sleep') {
     content = (
-      <PlaceholderPage
-        title="Сон"
-        description="Здесь появится таймер сна, история и статистика по вашему ТЗ."
+      <SleepPage
+        activeBaby={babies.activeBaby}
+        onOpenSettings={() => handleTabChange('settings')}
       />
     )
   } else if (tab === 'feeding') {
@@ -56,7 +62,10 @@ function App() {
     content = (
       <HomePage
         activeBaby={babies.activeBaby}
+        todaySleepLabel={todaySleepMs > 0 ? formatDurationRu(todaySleepMs) : null}
+        sleepInProgress={Boolean(sleep.activeTimer)}
         onOpenSettings={() => handleTabChange('settings')}
+        onOpenSleep={() => handleTabChange('sleep')}
       />
     )
   }
@@ -74,6 +83,16 @@ function App() {
       <InstallBanner />
       <BottomNav active={tab} onChange={handleTabChange} />
     </div>
+  )
+}
+
+function App() {
+  const babies = useBabies()
+
+  return (
+    <SleepProvider babyId={babies.activeBaby?.id ?? null}>
+      <AppContent babies={babies} />
+    </SleepProvider>
   )
 }
 

@@ -42,7 +42,6 @@ export async function notifySleepStarted(
         icon,
         badge: icon,
         tag: 'baby-care-sleep-started',
-        renotify: true,
       })
       return
     }

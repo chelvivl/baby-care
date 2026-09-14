@@ -110,7 +110,7 @@ textarea,
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   padding: 0 var(--page-padding-x)
-    calc(var(--nav-cloud-height) + var(--safe-bottom) + 0.85rem);
+    calc(var(--nav-cloud-height) + var(--safe-bottom) + 1.65rem);
 }
 
 .app-shell__veil {
@@ -1525,23 +1525,41 @@ button.pulse__tile {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  padding: 0.4rem var(--page-padding-x) 0.4rem;
-  /* Full-bleed frost to the screen edge — fills home-indicator zone. */
+  /* Tall enough for Instagram-style frost above the pill + home indicator. */
+  padding: 1.65rem var(--page-padding-x) 0.35rem;
+  background: transparent;
+}
+
+/*
+ * Frost lives on a sibling layer — never mask the nav itself.
+ * Masking .bottom-nav made the pill translucent and let sharp text bleed through labels.
+ */
+.bottom-nav::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--nav-cloud-height) + var(--safe-bottom) + 2.75rem);
+  pointer-events: none;
+  z-index: 0;
   background: linear-gradient(
     to top,
-    rgba(232, 238, 242, 0.94) 0%,
-    rgba(232, 238, 242, 0.6) 38%,
+    rgba(232, 238, 242, 0.97) 0%,
+    rgba(232, 238, 242, 0.78) 42%,
+    rgba(232, 238, 242, 0.28) 72%,
     rgba(232, 238, 242, 0) 100%
   );
-  backdrop-filter: blur(18px) saturate(1.2);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
-  mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
+  backdrop-filter: blur(28px) saturate(1.45);
+  -webkit-backdrop-filter: blur(28px) saturate(1.45);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 58%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 0%, #000 58%, transparent 100%);
 }
 
 .bottom-nav__cloud {
   pointer-events: auto;
   position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: stretch;
@@ -1553,13 +1571,13 @@ button.pulse__tile {
   padding: 0.32rem;
   padding-bottom: calc(0.32rem + var(--safe-bottom));
   border-radius: 1.55rem;
-  background: rgba(255, 255, 255, 0.84);
-  border: 1px solid rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.88);
   box-shadow:
     0 14px 36px rgba(18, 23, 28, 0.12),
     0 2px 8px rgba(18, 23, 28, 0.05);
-  backdrop-filter: blur(20px) saturate(1.35);
-  -webkit-backdrop-filter: blur(20px) saturate(1.35);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
 }
 
 .bottom-nav__indicator {

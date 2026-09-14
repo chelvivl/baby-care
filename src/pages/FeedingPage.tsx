@@ -4,8 +4,11 @@ import {
   FEEDING_KIND_LABELS,
   formatAmountMl,
   formatIntervalHours,
+  intervalHoursFromMinutes,
+  intervalMinutesFromHours,
   type FeedingEvent,
   type FeedingKind,
+  type FeedingSettings,
 } from '../domain/feeding'
 import {
   addDaysToKey,
@@ -27,6 +30,7 @@ type FeedingPageProps = {
 
 type FeedingView =
   | { kind: 'main' }
+  | { kind: 'prefs' }
   | { kind: 'create' }
   | { kind: 'edit'; event: FeedingEvent }
 
@@ -78,6 +82,19 @@ export function FeedingPage({ activeBaby, onOpenSettings }: FeedingPageProps) {
           </button>
         </section>
       </div>
+    )
+  }
+
+  if (view.kind === 'prefs') {
+    return (
+      <FeedingPrefsForm
+        settings={feeding.settings}
+        onBack={() => setView({ kind: 'main' })}
+        onSave={(patch) => {
+          feeding.updateSettings(patch)
+          setView({ kind: 'main' })
+        }}
+      />
     )
   }
 
@@ -142,9 +159,18 @@ export function FeedingPage({ activeBaby, onOpenSettings }: FeedingPageProps) {
 
   return (
     <div className="page feeding-page">
-      <header className="page-hero">
-        <p className="page-hero__kicker">{activeBaby.name}</p>
-        <h1 className="page-hero__title">Кормление</h1>
+      <header className="page-hero feeding-page__hero">
+        <div className="feeding-page__hero-copy">
+          <p className="page-hero__kicker">{activeBaby.name}</p>
+          <h1 className="page-hero__title">Кормление</h1>
+        </div>
+        <button
+          type="button"
+          className="feeding-page__prefs"
+          onClick={() => setView({ kind: 'prefs' })}
+        >
+          Параметры
+        </button>
       </header>
 
       <section
@@ -304,6 +330,151 @@ export function FeedingPage({ activeBaby, onOpenSettings }: FeedingPageProps) {
           setPendingDelete(null)
         }}
       />
+    </div>
+  )
+}
+
+function FeedingPrefsForm({
+  settings,
+  onBack,
+  onSave,
+}: {
+  settings: FeedingSettings
+  onBack: () => void
+  onSave: (patch: Partial<FeedingSettings>) => void
+}) {
+  const [defaultAmountMl, setDefaultAmountMl] = useState(
+    String(settings.defaultAmountMl),
+  )
+  const [intervalMinutes, setIntervalMinutes] = useState(
+    String(intervalMinutesFromHours(settings.intervalHours)),
+  )
+  const [notifyBeforeMinutes, setNotifyBeforeMinutes] = useState(
+    String(settings.notifyBeforeMinutes),
+  )
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    settings.notificationsEnabled,
+  )
+  const [error, setError] = useState<string | null>(null)
+
+  const intervalPreviewHours = (() => {
+    const minutes = Number(intervalMinutes)
+    if (!Number.isFinite(minutes) || minutes <= 0) {
+      return null
+    }
+    return intervalHoursFromMinutes(minutes)
+  })()
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    const amount = Number(defaultAmountMl)
+    const minutes = Number(intervalMinutes)
+    const lead = Number(notifyBeforeMinutes)
+
+    if (!Number.isFinite(amount) || amount < 1) {
+      setError('Укажите объём больше 0 мл')
+      return
+    }
+    if (!Number.isFinite(minutes) || minutes < 1) {
+      setError('Укажите интервал в минутах')
+      return
+    }
+    if (!Number.isFinite(lead) || lead < 0) {
+      setError('Минуты до напоминания не могут быть отрицательными')
+      return
+    }
+
+    if (notificationsEnabled) {
+      await ensureNotificationPermission()
+    }
+
+    onSave({
+      defaultAmountMl: Math.round(amount),
+      intervalHours: intervalHoursFromMinutes(minutes),
+      notifyBeforeMinutes: Math.round(lead),
+      notificationsEnabled,
+    })
+  }
+
+  return (
+    <div className="page form-page">
+      <header className="form-page__header">
+        <button type="button" className="back-btn" onClick={onBack}>
+          <span aria-hidden="true">‹</span>
+          Назад
+        </button>
+        <h1 className="form-page__title">Параметры кормления</h1>
+        <p className="form-page__lead">
+          Объём по умолчанию, интервал и напоминания
+        </p>
+      </header>
+
+      <form className="feed-settings" onSubmit={handleSubmit} noValidate>
+        <label className="feed-settings__field">
+          <span className="feed-settings__label">Объём по умолчанию</span>
+          <span className="feed-settings__control">
+            <input
+              className="feed-settings__input"
+              type="number"
+              inputMode="numeric"
+              step="any"
+              value={defaultAmountMl}
+              onChange={(event) => setDefaultAmountMl(event.target.value)}
+            />
+            <span className="feed-settings__unit">мл</span>
+          </span>
+        </label>
+
+        <label className="feed-settings__field">
+          <span className="feed-settings__label">Интервал между кормлениями</span>
+          <span className="feed-settings__control">
+            <input
+              className="feed-settings__input"
+              type="number"
+              inputMode="numeric"
+              step="any"
+              value={intervalMinutes}
+              onChange={(event) => setIntervalMinutes(event.target.value)}
+            />
+            <span className="feed-settings__unit">мин</span>
+          </span>
+          {intervalPreviewHours !== null ? (
+            <span className="feed-settings__hint">
+              Это {formatIntervalHours(intervalPreviewHours)}
+            </span>
+          ) : null}
+        </label>
+
+        <label className="feed-settings__field">
+          <span className="feed-settings__label">Напомнить заранее</span>
+          <span className="feed-settings__control">
+            <input
+              className="feed-settings__input"
+              type="number"
+              inputMode="numeric"
+              step="any"
+              value={notifyBeforeMinutes}
+              onChange={(event) => setNotifyBeforeMinutes(event.target.value)}
+            />
+            <span className="feed-settings__unit">мин</span>
+          </span>
+        </label>
+
+        <label className="settings-toggle">
+          <input
+            type="checkbox"
+            checked={notificationsEnabled}
+            onChange={(event) => setNotificationsEnabled(event.target.checked)}
+          />
+          <span>Уведомлять о скором кормлении</span>
+        </label>
+
+        {error ? <p className="composer__error">{error}</p> : null}
+
+        <button type="submit" className="btn btn--primary btn--block">
+          Сохранить
+        </button>
+      </form>
     </div>
   )
 }

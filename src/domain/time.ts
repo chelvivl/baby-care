@@ -110,3 +110,11 @@ export function formatTimerClock(ms: number): string {
   }
   return `${mm}:${ss}`
 }
+
+/** Live countdown copy for feeding / timers. */
+export function formatCountdownRu(ms: number): string {
+  if (ms <= 0) {
+    return 'сейчас'
+  }
+  return formatTimerClock(ms)
+}

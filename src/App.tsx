@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { TAB_ORDER, type AppTab } from './app/tabs'
 import { BottomNav } from './components/BottomNav'
 import { InstallBanner } from './components/InstallBanner'
@@ -6,7 +6,12 @@ import { useBabies } from './hooks/useBabies'
 import { FeedingProvider, useFeedingContext } from './hooks/FeedingContext'
 import { SleepProvider, useSleepContext } from './hooks/SleepContext'
 import { formatAmountMl } from './domain/feeding'
-import { formatDurationRu, formatTimeRu, toLocalDateKey } from './domain/time'
+import {
+  formatDurationRu,
+  formatTimeRu,
+  formatTimerClock,
+  toLocalDateKey,
+} from './domain/time'
 import { FeedingPage } from './pages/FeedingPage'
 import { HomePage } from './pages/HomePage'
 import { SettingsPage } from './pages/SettingsPage'
@@ -20,9 +25,18 @@ function AppContent({ babies }: { babies: BabiesApi }) {
   const previousTab = useRef<AppTab>('home')
   const sleep = useSleepContext()
   const feeding = useFeedingContext()
+  const [now, setNow] = useState(() => Date.now())
   const todayKey = toLocalDateKey(new Date())
   const todaySleepMs = sleep.totalForDay(todayKey)
   const todayFeedMl = feeding.totalMlForDay(todayKey)
+
+  useEffect(() => {
+    if (!feeding.latest) {
+      return
+    }
+    const id = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(id)
+  }, [feeding.latest])
 
   const handleTabChange = (next: AppTab) => {
     if (next === tab) {
@@ -65,10 +79,25 @@ function AppContent({ babies }: { babies: BabiesApi }) {
     )
   } else {
     const lastFed = feeding.latest
-    const feedingValue = todayFeedMl > 0 ? formatAmountMl(todayFeedMl) : null
-    const feedingHint = lastFed
+    const dueMs = feeding.schedule
+      ? feeding.schedule.dueAt.getTime() - now
+      : null
+
+    let feedingValue: string | null =
+      todayFeedMl > 0 ? formatAmountMl(todayFeedMl) : null
+    let feedingHint = lastFed
       ? `последнее ${formatTimeRu(lastFed.fedAt)}`
       : 'нет записей'
+
+    if (dueMs !== null) {
+      feedingValue = dueMs <= 0 ? 'Пора' : formatTimerClock(dueMs)
+      feedingHint =
+        todayFeedMl > 0
+          ? `${formatAmountMl(todayFeedMl)} сегодня`
+          : dueMs <= 0
+            ? 'время кормить'
+            : `к ${formatTimeRu(feeding.schedule!.dueAt.toISOString())}`
+    }
 
     content = (
       <HomePage
@@ -86,6 +115,7 @@ function AppContent({ babies }: { babies: BabiesApi }) {
 
   return (
     <div className="app-shell">
+      <div className="app-shell__veil app-shell__veil--top" aria-hidden="true" />
       <main className="app-shell__main">
         <div
           key={tab}
@@ -94,6 +124,7 @@ function AppContent({ babies }: { babies: BabiesApi }) {
           {content}
         </div>
       </main>
+      <div className="app-shell__veil app-shell__veil--bottom" aria-hidden="true" />
       <InstallBanner />
       <BottomNav active={tab} onChange={handleTabChange} />
     </div>

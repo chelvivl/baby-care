@@ -15,6 +15,7 @@ import {
   formatDayTitleRu,
   formatDurationRu,
   formatTimeRu,
+  formatTimerClock,
   fromDateTimeLocalValue,
   toDateTimeLocalValue,
   toLocalDateKey,
@@ -47,7 +48,7 @@ export function FeedingPage({ activeBaby, onOpenSettings }: FeedingPageProps) {
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), 30_000)
+    const id = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(id)
   }, [])
 
@@ -64,6 +65,12 @@ export function FeedingPage({ activeBaby, onOpenSettings }: FeedingPageProps) {
     [feeding.totalMlForDay, dayKey, feeding.events],
   )
   const todayKey = toLocalDateKey(new Date())
+
+  const dueMs =
+    feeding.latest && feeding.schedule
+      ? feeding.schedule.dueAt.getTime() - now
+      : null
+  const isDue = dueMs !== null && dueMs <= 0
 
   if (!activeBaby) {
     return (
@@ -146,17 +153,6 @@ export function FeedingPage({ activeBaby, onOpenSettings }: FeedingPageProps) {
     void ensureNotificationPermission()
   }
 
-  const scheduleHint = (() => {
-    if (!feeding.latest || !feeding.schedule) {
-      return null
-    }
-    const dueMs = feeding.schedule.dueAt.getTime() - now
-    if (dueMs <= 0) {
-      return 'Пора кормить'
-    }
-    return `Следующее через ${formatDurationRu(dueMs)} · ${formatTimeRu(feeding.schedule.dueAt.toISOString())}`
-  })()
-
   return (
     <div className="page feeding-page">
       <header className="page-hero feeding-page__hero">
@@ -174,19 +170,38 @@ export function FeedingPage({ activeBaby, onOpenSettings }: FeedingPageProps) {
       </header>
 
       <section
-        className={`feed-schedule${scheduleHint === 'Пора кормить' ? ' feed-schedule--due' : ''}`}
+        className={`feed-schedule${isDue ? ' feed-schedule--due' : ''}`}
         aria-label="Следующее кормление"
+        aria-live="polite"
       >
-        <p className="feed-schedule__label">Следующее</p>
-        <p className="feed-schedule__value">
-          {scheduleHint ??
-            `Каждые ${formatIntervalHours(feeding.settings.intervalHours)}`}
+        <p className="feed-schedule__label">
+          {dueMs === null
+            ? 'Интервал'
+            : isDue
+              ? 'Кормление'
+              : 'До кормления'}
         </p>
-        {feeding.settings.notificationsEnabled && feeding.latest ? (
-          <p className="feed-schedule__meta">
-            Напоминание за {feeding.settings.notifyBeforeMinutes} мин
+        {dueMs === null ? (
+          <p className="feed-schedule__countdown">
+            {formatIntervalHours(feeding.settings.intervalHours)}
           </p>
-        ) : null}
+        ) : isDue ? (
+          <p className="feed-schedule__countdown feed-schedule__countdown--due">
+            Пора кормить
+          </p>
+        ) : (
+          <p className="feed-schedule__countdown">{formatTimerClock(dueMs)}</p>
+        )}
+        <p className="feed-schedule__meta">
+          {dueMs === null
+            ? 'Запишите кормление — появится обратный отсчёт'
+            : isDue
+              ? `Прошло ${formatDurationRu(Math.abs(dueMs))}`
+              : `около ${formatTimeRu(feeding.schedule!.dueAt.toISOString())}`}
+          {feeding.settings.notificationsEnabled
+            ? ` · пуш за ${feeding.settings.notifyBeforeMinutes} мин`
+            : ''}
+        </p>
       </section>
 
       <section className="feed-quick" aria-label="Быстрая запись">

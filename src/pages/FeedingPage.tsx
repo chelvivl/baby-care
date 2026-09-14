@@ -214,11 +214,12 @@ export function FeedingPage({ activeBaby, onOpenSettings }: FeedingPageProps) {
           <span className="feed-amount__row">
             <input
               className="feed-amount__input"
-              type="number"
+              type="text"
               inputMode="numeric"
-              step="any"
+              pattern="[0-9]*"
+              autoComplete="off"
               value={quickAmount}
-              onChange={(event) => setQuickAmount(event.target.value)}
+              onChange={(event) => setQuickAmount(event.target.value.replace(/[^\d]/g, ''))}
             />
             <span className="feed-amount__unit">мл</span>
           </span>
@@ -415,11 +416,14 @@ function FeedingPrefsForm({
           <span className="feed-settings__control">
             <input
               className="feed-settings__input"
-              type="number"
+              type="text"
               inputMode="numeric"
-              step="any"
+              pattern="[0-9]*"
+              autoComplete="off"
               value={defaultAmountMl}
-              onChange={(event) => setDefaultAmountMl(event.target.value)}
+              onChange={(event) =>
+                setDefaultAmountMl(event.target.value.replace(/[^\d]/g, ''))
+              }
             />
             <span className="feed-settings__unit">мл</span>
           </span>
@@ -430,11 +434,14 @@ function FeedingPrefsForm({
           <span className="feed-settings__control">
             <input
               className="feed-settings__input"
-              type="number"
+              type="text"
               inputMode="numeric"
-              step="any"
+              pattern="[0-9]*"
+              autoComplete="off"
               value={intervalMinutes}
-              onChange={(event) => setIntervalMinutes(event.target.value)}
+              onChange={(event) =>
+                setIntervalMinutes(event.target.value.replace(/[^\d]/g, ''))
+              }
             />
             <span className="feed-settings__unit">мин</span>
           </span>
@@ -450,11 +457,14 @@ function FeedingPrefsForm({
           <span className="feed-settings__control">
             <input
               className="feed-settings__input"
-              type="number"
+              type="text"
               inputMode="numeric"
-              step="any"
+              pattern="[0-9]*"
+              autoComplete="off"
               value={notifyBeforeMinutes}
-              onChange={(event) => setNotifyBeforeMinutes(event.target.value)}
+              onChange={(event) =>
+                setNotifyBeforeMinutes(event.target.value.replace(/[^\d]/g, ''))
+              }
             />
             <span className="feed-settings__unit">мин</span>
           </span>
@@ -574,13 +584,12 @@ function FeedingForm({
             <span className="field__label">Объём, мл</span>
             <input
               className="field__input"
-              type="number"
+              type="text"
               inputMode="numeric"
-              min={1}
-              max={1000}
-              step="any"
+              pattern="[0-9]*"
+              autoComplete="off"
               value={amount}
-              onChange={(event) => setAmount(event.target.value)}
+              onChange={(event) => setAmount(event.target.value.replace(/[^\d]/g, ''))}
             />
           </label>
         </div>

@@ -110,7 +110,7 @@ textarea,
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   padding: 0 var(--page-padding-x)
-    calc(var(--nav-cloud-height) + var(--safe-bottom) + 1.65rem);
+    calc(var(--nav-cloud-height) + var(--safe-bottom) + 1.1rem);
 }
 
 .app-shell__veil {
@@ -1525,35 +1525,31 @@ button.pulse__tile {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  /* Tall enough for Instagram-style frost above the pill + home indicator. */
-  padding: 1.65rem var(--page-padding-x) 0.35rem;
+  /* Pill sits low; safe-area stays BELOW it as frost, not inside the pill height. */
+  padding: 1.15rem var(--page-padding-x) 0.35rem;
   background: transparent;
 }
 
-/*
- * Frost lives on a sibling layer — never mask the nav itself.
- * Masking .bottom-nav made the pill translucent and let sharp text bleed through labels.
- */
+/* Full-bleed frost like the top veil — covers under-pill gap + home indicator. */
 .bottom-nav::before {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: calc(var(--nav-cloud-height) + var(--safe-bottom) + 2.75rem);
+  height: calc(var(--nav-cloud-height) + var(--safe-bottom) + 1.5rem);
   pointer-events: none;
   z-index: 0;
   background: linear-gradient(
     to top,
-    rgba(232, 238, 242, 0.97) 0%,
-    rgba(232, 238, 242, 0.78) 42%,
-    rgba(232, 238, 242, 0.28) 72%,
+    rgba(232, 238, 242, 0.94) 0%,
+    rgba(232, 238, 242, 0.72) 55%,
     rgba(232, 238, 242, 0) 100%
   );
-  backdrop-filter: blur(28px) saturate(1.45);
-  -webkit-backdrop-filter: blur(28px) saturate(1.45);
-  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 58%, transparent 100%);
-  mask-image: linear-gradient(to top, #000 0%, #000 58%, transparent 100%);
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
 }
 
 .bottom-nav__cloud {
@@ -1566,10 +1562,9 @@ button.pulse__tile {
   gap: 0.1rem;
   width: min(100%, 26rem);
   min-height: var(--nav-cloud-height);
-  /* No safe-bottom margin — that was the huge empty gap under the pill. */
-  margin-bottom: 0;
+  /* Sit low near the screen edge; under-pill strip is frost (safe-area), not empty gray. */
+  margin-bottom: 0.35rem;
   padding: 0.32rem;
-  padding-bottom: calc(0.32rem + var(--safe-bottom));
   border-radius: 1.55rem;
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.88);
@@ -1583,7 +1578,7 @@ button.pulse__tile {
 .bottom-nav__indicator {
   position: absolute;
   top: 0.32rem;
-  bottom: calc(0.32rem + var(--safe-bottom));
+  bottom: 0.32rem;
   left: 0;
   border-radius: 1.2rem;
   background: rgba(15, 118, 110, 0.12);

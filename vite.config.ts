@@ -23,6 +23,7 @@ export default defineConfig({
         orientation: 'portrait',
         theme_color: '#dce9ee',
         background_color: '#dce9ee',
+        categories: ['lifestyle', 'health'],
         icons: [
           {
             src: 'apple-touch-icon.svg',

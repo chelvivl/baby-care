@@ -158,12 +158,6 @@ button {
   color: var(--ink);
 }
 
-.home-page__lead {
-  margin: 0.75rem 0 0;
-  max-width: 28ch;
-  color: var(--ink-muted);
-}
-
 .home-page__summary {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -222,8 +216,254 @@ button {
   cursor: not-allowed;
 }
 
-.home-page__footnote {
+.age-card,
+.age-empty,
+.baby-form,
+.baby-card {
+  border-radius: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+}
+
+.age-card {
+  padding: 1.15rem 1.15rem 1.05rem;
+  margin-bottom: 1.25rem;
+}
+
+.age-card__eyebrow {
   margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.age-card__name {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.age-card__primary {
+  margin: 0.55rem 0 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.age-card__weeks {
+  margin: 0.25rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--ink-muted);
+}
+
+.age-grid {
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+.age-grid__item {
+  margin: 0;
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(26, 46, 52, 0.06);
+}
+
+.age-grid__item dt {
+  margin: 0;
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+}
+
+.age-grid__item dd {
+  margin: 0.2rem 0 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.age-card__birth {
+  margin: 0.85rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+.age-empty {
+  padding: 1.15rem;
+  margin-bottom: 1.25rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.age-empty__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.age-empty__text {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.9375rem;
+}
+
+.settings-page__header {
+  margin-bottom: 1.25rem;
+}
+
+.settings-page__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.settings-page__lead {
+  margin: 0.5rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.9375rem;
+}
+
+.baby-form {
+  padding: 1.1rem;
+  margin-bottom: 1.25rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.baby-form__title,
+.baby-list__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.field__input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  padding: 0.75rem 0.85rem;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--ink);
+  font: inherit;
+  outline: none;
+  appearance: none;
+}
+
+.field__input:focus {
+  border-color: rgba(74, 124, 140, 0.55);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.baby-form__error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.8125rem;
+}
+
+.baby-form__actions,
+.baby-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.7rem 1.05rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn--ghost {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.btn--danger {
+  background: rgba(180, 35, 24, 0.1);
+  color: #b42318;
+}
+
+.btn--compact {
+  padding: 0.45rem 0.8rem;
+  font-size: 0.75rem;
+}
+
+.baby-list__title {
+  margin-bottom: 0.75rem;
+}
+
+.baby-list__empty {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.9375rem;
+}
+
+.baby-list__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.baby-card {
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.baby-card__select {
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0.35rem 0.4rem;
+  border-radius: 0.85rem;
+  cursor: pointer;
+  color: inherit;
+}
+
+.baby-card__select--active {
+  background: var(--accent-soft);
+}
+
+.baby-card__name {
+  display: block;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.baby-card__meta {
+  display: block;
+  margin-top: 0.15rem;
   font-size: 0.8125rem;
   color: var(--ink-muted);
 }
@@ -379,8 +619,9 @@ button {
 }
 
 .bottom-nav__label {
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 @media (display-mode: standalone) {

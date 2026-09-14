@@ -1,19 +1,16 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import type { AppTab } from '../app/tabs'
-import { TAB_LABELS } from '../app/tabs'
+import { TAB_LABELS, TAB_ORDER, type AppTab } from '../app/tabs'
 
 type BottomNavProps = {
   active: AppTab
   onChange: (tab: AppTab) => void
 }
 
-const tabs: AppTab[] = ['home', 'sleep', 'feeding', 'more']
-
 const icons: Record<AppTab, string> = {
   home: '◎',
   sleep: '☾',
   feeding: '◔',
-  more: '⋯',
+  settings: '⚙',
 }
 
 export function BottomNav({ active, onChange }: BottomNavProps) {
@@ -55,7 +52,7 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
           }}
           aria-hidden="true"
         />
-        {tabs.map((tab) => {
+        {TAB_ORDER.map((tab) => {
           const isActive = tab === active
           return (
             <button

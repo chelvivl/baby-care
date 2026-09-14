@@ -1,47 +1,17 @@
-import { useRef, useState } from 'react'
-import type { AppTab } from './app/tabs'
+import { useRef, useState, type ReactNode } from 'react'
+import { TAB_ORDER, type AppTab } from './app/tabs'
 import { BottomNav } from './components/BottomNav'
 import { InstallBanner } from './components/InstallBanner'
+import { useBabies } from './hooks/useBabies'
 import { HomePage } from './pages/HomePage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
-
-const TAB_ORDER: AppTab[] = ['home', 'sleep', 'feeding', 'more']
-
-function renderTab(tab: AppTab) {
-  if (tab === 'sleep') {
-    return (
-      <PlaceholderPage
-        title="Сон"
-        description="Здесь появится таймер сна, история и статистика по вашему ТЗ."
-      />
-    )
-  }
-
-  if (tab === 'feeding') {
-    return (
-      <PlaceholderPage
-        title="Кормление"
-        description="Здесь будут записи кормлений: время, тип, объём или длительность."
-      />
-    )
-  }
-
-  if (tab === 'more') {
-    return (
-      <PlaceholderPage
-        title="Ещё"
-        description="Настройки профиля малыша, экспорт данных и дополнительные разделы."
-      />
-    )
-  }
-
-  return <HomePage />
-}
+import { SettingsPage } from './pages/SettingsPage'
 
 function App() {
   const [tab, setTab] = useState<AppTab>('home')
   const [direction, setDirection] = useState<'forward' | 'back'>('forward')
   const previousTab = useRef<AppTab>('home')
+  const babies = useBabies()
 
   const handleTabChange = (next: AppTab) => {
     if (next === tab) {
@@ -55,6 +25,42 @@ function App() {
     setTab(next)
   }
 
+  let content: ReactNode
+
+  if (tab === 'sleep') {
+    content = (
+      <PlaceholderPage
+        title="Сон"
+        description="Здесь появится таймер сна, история и статистика по вашему ТЗ."
+      />
+    )
+  } else if (tab === 'feeding') {
+    content = (
+      <PlaceholderPage
+        title="Кормление"
+        description="Здесь будут записи кормлений: время, тип, объём или длительность."
+      />
+    )
+  } else if (tab === 'settings') {
+    content = (
+      <SettingsPage
+        babies={babies.babies}
+        activeBabyId={babies.activeBabyId}
+        onCreate={babies.create}
+        onUpdate={babies.update}
+        onRemove={babies.remove}
+        onSelect={babies.select}
+      />
+    )
+  } else {
+    content = (
+      <HomePage
+        activeBaby={babies.activeBaby}
+        onOpenSettings={() => handleTabChange('settings')}
+      />
+    )
+  }
+
   return (
     <div className="app-shell">
       <main className="app-shell__main">
@@ -62,7 +68,7 @@ function App() {
           key={tab}
           className={`app-shell__pane app-shell__pane--${direction}`}
         >
-          {renderTab(tab)}
+          {content}
         </div>
       </main>
       <InstallBanner />

@@ -36,8 +36,7 @@ export function InstallBanner() {
       <div>
         <p className="install-banner__title">Добавить на экран</p>
         <p className="install-banner__text">
-          На iPhone: «Поделиться» → «На экран Домой». После обновлений иногда нужно
-          удалить иконку и добавить снова — иначе status bar останется белой полосой.
+          Установите приложение, чтобы открывать его как обычную иконку на телефоне.
         </p>
       </div>
       <div className="install-banner__actions">

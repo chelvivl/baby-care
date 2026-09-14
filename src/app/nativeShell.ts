@@ -1,8 +1,5 @@
 /** Ограничения поведения браузера — ближе к нативному приложению. */
 export function applyNativeAppBehavior() {
-  ensureIosStandaloneClass()
-  ensureIosStatusBarMeta()
-
   const blockPinchZoom = (event: Event) => {
     event.preventDefault()
   }
@@ -41,34 +38,4 @@ export function applyNativeAppBehavior() {
     }
     event.preventDefault()
   })
-}
-
-function ensureIosStandaloneClass() {
-  const nav = window.navigator as Navigator & { standalone?: boolean }
-  const standalone =
-    nav.standalone === true ||
-    window.matchMedia('(display-mode: standalone)').matches ||
-    window.matchMedia('(display-mode: fullscreen)').matches
-
-  document.documentElement.classList.toggle('ios-standalone', standalone)
-}
-
-/** iOS caches this meta; keep it explicit for installed PWAs. */
-function ensureIosStatusBarMeta() {
-  const name = 'apple-mobile-web-app-status-bar-style'
-  let meta = document.querySelector(`meta[name="${name}"]`)
-  if (!meta) {
-    meta = document.createElement('meta')
-    meta.setAttribute('name', name)
-    document.head.appendChild(meta)
-  }
-  meta.setAttribute('content', 'black-translucent')
-
-  let capable = document.querySelector('meta[name="apple-mobile-web-app-capable"]')
-  if (!capable) {
-    capable = document.createElement('meta')
-    capable.setAttribute('name', 'apple-mobile-web-app-capable')
-    document.head.appendChild(capable)
-  }
-  capable.setAttribute('content', 'yes')
 }

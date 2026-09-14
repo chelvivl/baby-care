@@ -115,7 +115,6 @@ function AppContent({ babies }: { babies: BabiesApi }) {
 
   return (
     <div className="app-shell">
-      <div className="app-shell__veil app-shell__veil--top" aria-hidden="true" />
       <main className="app-shell__main">
         <div
           key={tab}
@@ -124,7 +123,6 @@ function AppContent({ babies }: { babies: BabiesApi }) {
           {content}
         </div>
       </main>
-      <div className="app-shell__veil app-shell__veil--bottom" aria-hidden="true" />
       <InstallBanner />
       <BottomNav active={tab} onChange={handleTabChange} />
     </div>

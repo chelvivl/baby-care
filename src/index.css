@@ -109,15 +109,10 @@ textarea,
   overflow-y: auto;
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
-  /* No top padding — content paints under the status bar / island. */
   padding: 0 var(--page-padding-x)
     calc(var(--nav-cloud-height) + var(--nav-float-gap) + var(--safe-bottom) + 1.35rem);
 }
 
-/*
-  Frosted status bar: only the safe-area strip.
-  Content scrolls underneath; blur reveals whatever is behind (timer card, etc.).
-*/
 .app-shell__veil {
   position: fixed;
   left: 0;
@@ -125,31 +120,13 @@ textarea,
   pointer-events: none;
 }
 
+/* In Safari tab the system status bar is opaque — a CSS veil only makes a fake white strip. */
 .app-shell__veil--top {
-  top: 0;
-  z-index: 40;
-  height: var(--safe-top);
-  background: rgba(255, 255, 255, 0.28);
-  backdrop-filter: blur(22px) saturate(1.45);
-  -webkit-backdrop-filter: blur(22px) saturate(1.45);
+  display: none;
 }
 
 .app-shell__veil--bottom {
-  bottom: 0;
-  z-index: 22;
-  height: calc(
-    var(--nav-cloud-height) + var(--nav-float-gap) + var(--safe-bottom) + 1.75rem
-  );
-  background: linear-gradient(
-    to top,
-    rgba(232, 238, 242, 0.5) 0%,
-    rgba(232, 238, 242, 0.18) 45%,
-    rgba(232, 238, 242, 0) 100%
-  );
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
-  mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
+  display: none;
 }
 
 .app-shell__pane {
@@ -157,8 +134,108 @@ textarea,
   max-width: 100%;
   min-width: 0;
   overflow-x: hidden;
-  /* Start slightly under the island so the frost has real content to blur. */
-  padding-top: calc(var(--safe-top) * 0.42);
+  padding-top: calc(var(--safe-top) + 0.55rem);
+}
+
+/*
+  Installed PWA + apple-mobile-web-app-status-bar-style=black-translucent:
+  web content draws under the Dynamic Island. Icons become white, so frost is
+  slightly dark glass — content still shows through when scrolling.
+*/
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .app-shell__pane {
+    /* Leave most of the safe area for content under the island. */
+    padding-top: calc(var(--safe-top) * 0.28 + 0.35rem);
+  }
+
+  .app-shell__veil--top {
+    display: block;
+    top: 0;
+    z-index: 40;
+    height: calc(var(--safe-top) + 0.65rem);
+    background: linear-gradient(
+      to bottom,
+      rgba(10, 16, 20, 0.5) 0%,
+      rgba(10, 16, 20, 0.22) 55%,
+      rgba(10, 16, 20, 0) 100%
+    );
+    backdrop-filter: blur(18px) saturate(1.35);
+    -webkit-backdrop-filter: blur(18px) saturate(1.35);
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 48%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 100%);
+  }
+
+  .app-shell__veil--bottom {
+    display: block;
+    bottom: 0;
+    z-index: 22;
+    height: calc(
+      var(--nav-cloud-height) + var(--nav-float-gap) + var(--safe-bottom) + 1.5rem
+    );
+    background: linear-gradient(
+      to top,
+      rgba(232, 238, 242, 0.55) 0%,
+      rgba(232, 238, 242, 0.2) 50%,
+      rgba(232, 238, 242, 0) 100%
+    );
+    backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-mask-image: linear-gradient(to top, #000 0%, #000 50%, transparent 100%);
+    mask-image: linear-gradient(to top, #000 0%, #000 50%, transparent 100%);
+  }
+}
+
+/* iOS legacy standalone flag (Safari “Add to Home Screen”). */
+@supports (-webkit-touch-callout: none) {
+  html.ios-standalone .app-shell__pane {
+    padding-top: calc(var(--safe-top) * 0.28 + 0.35rem);
+  }
+
+  html.ios-standalone .app-shell__veil--top {
+    display: block;
+    top: 0;
+    z-index: 40;
+    height: calc(var(--safe-top) + 0.65rem);
+    background: linear-gradient(
+      to bottom,
+      rgba(10, 16, 20, 0.5) 0%,
+      rgba(10, 16, 20, 0.22) 55%,
+      rgba(10, 16, 20, 0) 100%
+    );
+    backdrop-filter: blur(18px) saturate(1.35);
+    -webkit-backdrop-filter: blur(18px) saturate(1.35);
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 48%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 100%);
+  }
+
+  html.ios-standalone .app-shell__veil--bottom {
+    display: block;
+    bottom: 0;
+    z-index: 22;
+    height: calc(
+      var(--nav-cloud-height) + var(--nav-float-gap) + var(--safe-bottom) + 1.5rem
+    );
+    background: linear-gradient(
+      to top,
+      rgba(232, 238, 242, 0.55) 0%,
+      rgba(232, 238, 242, 0.2) 50%,
+      rgba(232, 238, 242, 0) 100%
+    );
+    backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-mask-image: linear-gradient(to top, #000 0%, #000 50%, transparent 100%);
+    mask-image: linear-gradient(to top, #000 0%, #000 50%, transparent 100%);
+  }
 }
 
 .app-shell__pane--forward {

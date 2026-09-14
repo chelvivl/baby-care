@@ -126,7 +126,6 @@ function AppContent({ babies }: { babies: BabiesApi }) {
       </main>
       <InstallBanner />
       <BottomNav active={tab} onChange={handleTabChange} />
-      <div className="app-shell__veil app-shell__veil--bottom" aria-hidden="true" />
     </div>
   )
 }

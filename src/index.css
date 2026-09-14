@@ -110,7 +110,7 @@ textarea,
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   padding: 0 var(--page-padding-x)
-    calc(var(--nav-cloud-height) + 1.25rem);
+    calc(var(--nav-cloud-height) + var(--safe-bottom) + 1.1rem);
 }
 
 .app-shell__veil {
@@ -151,6 +151,23 @@ textarea,
     -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
     mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
   }
+
+  .app-shell__veil--bottom {
+    display: block;
+    bottom: 0;
+    z-index: 25;
+    height: calc(var(--nav-cloud-height) + var(--safe-bottom) + 1.25rem);
+    background: linear-gradient(
+      to top,
+      rgba(255, 255, 255, 0.82) 0%,
+      rgba(255, 255, 255, 0.45) 42%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-mask-image: linear-gradient(to top, #000 0%, #000 52%, transparent 100%);
+    mask-image: linear-gradient(to top, #000 0%, #000 52%, transparent 100%);
+  }
 }
 
 @supports (-webkit-touch-callout: none) {
@@ -169,6 +186,23 @@ textarea,
     -webkit-backdrop-filter: blur(18px) saturate(1.35);
     -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
     mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
+  }
+
+  html.ios-standalone .app-shell__veil--bottom {
+    display: block;
+    bottom: 0;
+    z-index: 25;
+    height: calc(var(--nav-cloud-height) + var(--safe-bottom) + 1.25rem);
+    background: linear-gradient(
+      to top,
+      rgba(255, 255, 255, 0.82) 0%,
+      rgba(255, 255, 255, 0.45) 42%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-mask-image: linear-gradient(to top, #000 0%, #000 52%, transparent 100%);
+    mask-image: linear-gradient(to top, #000 0%, #000 52%, transparent 100%);
   }
 }
 
@@ -1519,41 +1553,15 @@ button.pulse__tile {
   position: fixed;
   left: 0;
   right: 0;
-  /*
-   * iOS standalone: fixed bottom:0 often sits ABOVE the home-indicator band,
-   * leaving a naked gray strip painted by the page background. Pull the bar
-   * down into that band so frost covers it — no empty strip under the pill.
-   */
-  bottom: calc(0px - var(--safe-bottom));
+  bottom: 0;
   z-index: 30;
   pointer-events: none;
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  padding: 1.15rem var(--page-padding-x) 0.5rem;
+  /* Pill sits low on the bottom veil — no safe-area gap under it (that was the strip). */
+  padding: 0.75rem var(--page-padding-x) 0.45rem;
   background: transparent;
-}
-
-/* Same idea as the top veil: frost to the physical screen edge. */
-.bottom-nav::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  top: 0;
-  pointer-events: none;
-  z-index: 0;
-  background: linear-gradient(
-    to top,
-    rgba(232, 238, 242, 0.9) 0%,
-    rgba(232, 238, 242, 0.55) 55%,
-    rgba(232, 238, 242, 0) 100%
-  );
-  backdrop-filter: blur(18px) saturate(1.35);
-  -webkit-backdrop-filter: blur(18px) saturate(1.35);
-  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
-  mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
 }
 
 .bottom-nav__cloud {
@@ -1569,7 +1577,7 @@ button.pulse__tile {
   margin: 0;
   padding: 0.32rem;
   border-radius: 1.55rem;
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.88);
   box-shadow:
     0 14px 36px rgba(18, 23, 28, 0.12),

@@ -23,12 +23,24 @@ export function SleepDayTimeline({
 }: SleepDayTimelineProps) {
   return (
     <div className="sleep-feed">
+      {awakeUntilNowMs !== null && awakeUntilNowMs >= 60_000 ? (
+        <div className="sleep-wake">
+          <span className="sleep-wake__line" aria-hidden="true" />
+          <span className="sleep-wake__pill">
+            Бодрствование {formatDurationRu(awakeUntilNowMs)}
+          </span>
+          <span className="sleep-wake__line" aria-hidden="true" />
+        </div>
+      ) : null}
+
       {sessions.map((session, index) => {
-        const next = sessions[index + 1]
-        const gapMs = next
+        const older = sessions[index + 1]
+        // Newest-first: gap between this session and the older one below.
+        const gapMs = older
           ? Math.max(
               0,
-              new Date(next.startAt).getTime() - new Date(session.endAt).getTime(),
+              new Date(session.startAt).getTime() -
+                new Date(older.endAt).getTime(),
             )
           : null
 
@@ -53,16 +65,6 @@ export function SleepDayTimeline({
           </div>
         )
       })}
-
-      {awakeUntilNowMs !== null && awakeUntilNowMs >= 60_000 ? (
-        <div className="sleep-wake">
-          <span className="sleep-wake__line" aria-hidden="true" />
-          <span className="sleep-wake__pill">
-            Бодрствование {formatDurationRu(awakeUntilNowMs)}
-          </span>
-          <span className="sleep-wake__line" aria-hidden="true" />
-        </div>
-      ) : null}
     </div>
   )
 }

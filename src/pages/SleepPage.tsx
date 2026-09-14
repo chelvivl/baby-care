@@ -313,8 +313,7 @@ export function SleepPage({ activeBaby, onOpenSettings }: SleepPageProps) {
               dayKey === todayKey && daySessions.length > 0
                 ? Math.max(
                     0,
-                    Date.now() -
-                      new Date(daySessions[daySessions.length - 1].endAt).getTime(),
+                    Date.now() - new Date(daySessions[0].endAt).getTime(),
                   )
                 : null
             }

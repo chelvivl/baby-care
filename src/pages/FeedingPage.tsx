@@ -147,89 +147,94 @@ export function FeedingPage({ activeBaby, onOpenSettings }: FeedingPageProps) {
         <h1 className="page-hero__title">Кормление</h1>
       </header>
 
+      <section
+        className={`feed-schedule${scheduleHint === 'Пора кормить' ? ' feed-schedule--due' : ''}`}
+        aria-label="Следующее кормление"
+      >
+        <p className="feed-schedule__label">Следующее</p>
+        <p className="feed-schedule__value">
+          {scheduleHint ??
+            `Каждые ${formatIntervalHours(feeding.settings.intervalHours)}`}
+        </p>
+        {feeding.settings.notificationsEnabled && feeding.latest ? (
+          <p className="feed-schedule__meta">
+            Напоминание за {feeding.settings.notifyBeforeMinutes} мин
+          </p>
+        ) : null}
+      </section>
+
       <section className="feed-quick" aria-label="Быстрая запись">
-        <div className="kind-switch" role="group" aria-label="Что дали">
+        <p className="feed-quick__eyebrow">Новая запись</p>
+
+        <div className="feed-kind" role="group" aria-label="Что дали">
           <button
             type="button"
-            className={`kind-switch__btn${quickKind === 'formula' ? ' kind-switch__btn--active' : ''}`}
+            className={`feed-kind__btn${quickKind === 'formula' ? ' feed-kind__btn--active' : ''}`}
             onClick={() => setQuickKind('formula')}
           >
             Смесь
           </button>
           <button
             type="button"
-            className={`kind-switch__btn${quickKind === 'water' ? ' kind-switch__btn--active' : ''}`}
+            className={`feed-kind__btn${quickKind === 'water' ? ' feed-kind__btn--active' : ''}`}
             onClick={() => setQuickKind('water')}
           >
             Вода
           </button>
         </div>
 
-        <label className="field feed-quick__amount">
-          <span className="field__label">Объём, мл</span>
-          <input
-            className="field__input"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={1000}
-            step="any"
-            value={quickAmount}
-            onChange={(event) => setQuickAmount(event.target.value)}
-          />
+        <label className="feed-amount">
+          <span className="feed-amount__label">Объём</span>
+          <span className="feed-amount__row">
+            <input
+              className="feed-amount__input"
+              type="number"
+              inputMode="numeric"
+              step="any"
+              value={quickAmount}
+              onChange={(event) => setQuickAmount(event.target.value)}
+            />
+            <span className="feed-amount__unit">мл</span>
+          </span>
         </label>
 
         <div className="feed-quick__actions">
           <button
             type="button"
-            className="btn btn--primary"
+            className="btn btn--primary btn--block"
             onClick={handleQuickAdd}
           >
             Записать сейчас
           </button>
           <button
             type="button"
-            className="btn btn--secondary"
+            className="feed-quick__manual"
             onClick={() => setView({ kind: 'create' })}
           >
-            Другое время
+            Указать другое время
           </button>
         </div>
-
-        {scheduleHint ? (
-          <p className="feed-quick__hint">
-            {scheduleHint}
-            {feeding.settings.notificationsEnabled
-              ? ` · напоминание за ${feeding.settings.notifyBeforeMinutes} мин`
-              : null}
-          </p>
-        ) : (
-          <p className="feed-quick__hint">
-            Интервал по умолчанию: каждые{' '}
-            {formatIntervalHours(feeding.settings.intervalHours)}
-          </p>
-        )}
       </section>
 
-      <section className="sleep-history" aria-label="История кормлений">
-        <div className="sleep-history__nav">
+      <section className="feed-history" aria-label="История кормлений">
+        <div className="feed-history__nav">
           <button
             type="button"
-            className="sleep-history__arrow"
+            className="feed-history__arrow"
             aria-label="Предыдущий день"
             onClick={() => setDayKey((key) => addDaysToKey(key, -1))}
           >
             ‹
           </button>
-          <div className="sleep-history__day">
-            <p className="sleep-history__title">{formatDayTitleRu(dayKey)}</p>
-            <p className="sleep-history__total">
+          <div className="feed-history__day">
+            <p className="feed-history__title">{formatDayTitleRu(dayKey)}</p>
+            <p className="feed-history__total">
               {dayTotalMl > 0 ? formatAmountMl(dayTotalMl) : 'нет записей'}
             </p>
           </div>
           <button
             type="button"
-            className="sleep-history__arrow"
+            className="feed-history__arrow"
             aria-label="Следующий день"
             disabled={dayKey >= todayKey}
             onClick={() => setDayKey((key) => addDaysToKey(key, 1))}
@@ -239,10 +244,10 @@ export function FeedingPage({ activeBaby, onOpenSettings }: FeedingPageProps) {
         </div>
 
         {dayEvents.length === 0 ? (
-          <div className="sleep-empty">
-            <p className="sleep-empty__title">Пока пусто</p>
-            <p className="sleep-empty__text">
-              Запишите кормление кнопкой выше — появится в истории дня.
+          <div className="feed-empty">
+            <p className="feed-empty__title">Пока пусто</p>
+            <p className="feed-empty__text">
+              Запишите кормление выше — оно появится в истории дня.
             </p>
           </div>
         ) : (

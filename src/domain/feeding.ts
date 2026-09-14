@@ -77,8 +77,9 @@ export function formatAmountMl(ml: number): string {
 }
 
 export function formatIntervalHours(hours: number): string {
-  const whole = Math.floor(hours)
-  const minutes = Math.round((hours - whole) * 60)
+  const totalMinutes = Math.max(0, Math.round(hours * 60))
+  const whole = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
   if (whole <= 0 && minutes > 0) {
     return `${minutes} мин`
   }
@@ -89,4 +90,13 @@ export function formatIntervalHours(hours: number): string {
     return `${minutes} мин`
   }
   return `${whole} ч ${minutes} мин`
+}
+
+/** UI edits interval in minutes; storage keeps fractional hours. */
+export function intervalMinutesFromHours(hours: number): number {
+  return Math.max(0, Math.round(hours * 60))
+}
+
+export function intervalHoursFromMinutes(minutes: number): number {
+  return Math.round((Math.max(0, minutes) / 60) * 1000) / 1000
 }

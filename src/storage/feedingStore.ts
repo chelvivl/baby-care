@@ -178,28 +178,22 @@ function normalizeSettings(value: unknown): FeedingSettings {
       ? (value as Partial<FeedingSettings>)
       : {}
 
-  const defaultAmountMl = clampNumber(
+  const defaultAmountMl = positiveNumber(
     raw.defaultAmountMl,
     DEFAULT_FEEDING_SETTINGS.defaultAmountMl,
-    1,
-    1000,
   )
-  const intervalHours = clampNumber(
+  const intervalHours = positiveNumber(
     raw.intervalHours,
     DEFAULT_FEEDING_SETTINGS.intervalHours,
-    0.5,
-    24,
   )
-  const notifyBeforeMinutes = clampNumber(
+  const notifyBeforeMinutes = nonNegativeNumber(
     raw.notifyBeforeMinutes,
     DEFAULT_FEEDING_SETTINGS.notifyBeforeMinutes,
-    0,
-    180,
   )
 
   return {
     defaultAmountMl: Math.round(defaultAmountMl),
-    intervalHours: Math.round(intervalHours * 100) / 100,
+    intervalHours: Math.round(intervalHours * 1000) / 1000,
     notifyBeforeMinutes: Math.round(notifyBeforeMinutes),
     notificationsEnabled:
       typeof raw.notificationsEnabled === 'boolean'
@@ -208,14 +202,16 @@ function normalizeSettings(value: unknown): FeedingSettings {
   }
 }
 
-function clampNumber(
-  value: unknown,
-  fallback: number,
-  min: number,
-  max: number,
-): number {
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
+function positiveNumber(value: unknown, fallback: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
     return fallback
   }
-  return Math.min(max, Math.max(min, value))
+  return value
+}
+
+function nonNegativeNumber(value: unknown, fallback: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    return fallback
+  }
+  return value
 }

@@ -3,6 +3,8 @@ import type { Baby } from '../domain/baby'
 import { formatBirthDateRu } from '../domain/age'
 import {
   formatIntervalHours,
+  intervalHoursFromMinutes,
+  intervalMinutesFromHours,
   type FeedingSettings,
 } from '../domain/feeding'
 import { ensureNotificationPermission } from '../app/notifications'
@@ -175,7 +177,9 @@ function FeedingSettingsCard({
   const [defaultAmountMl, setDefaultAmountMl] = useState(
     String(settings.defaultAmountMl),
   )
-  const [intervalHours, setIntervalHours] = useState(String(settings.intervalHours))
+  const [intervalMinutes, setIntervalMinutes] = useState(
+    String(intervalMinutesFromHours(settings.intervalHours)),
+  )
   const [notifyBeforeMinutes, setNotifyBeforeMinutes] = useState(
     String(settings.notifyBeforeMinutes),
   )
@@ -185,18 +189,26 @@ function FeedingSettingsCard({
   const [savedHint, setSavedHint] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  const intervalPreviewHours = (() => {
+    const minutes = Number(intervalMinutes)
+    if (!Number.isFinite(minutes) || minutes <= 0) {
+      return null
+    }
+    return intervalHoursFromMinutes(minutes)
+  })()
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     const amount = Number(defaultAmountMl)
-    const interval = Number(intervalHours)
+    const minutes = Number(intervalMinutes)
     const lead = Number(notifyBeforeMinutes)
 
     if (!Number.isFinite(amount) || amount < 1) {
-      setError('Объём по умолчанию — от 1 мл')
+      setError('Укажите объём больше 0 мл')
       return
     }
-    if (!Number.isFinite(interval) || interval < 0.5) {
-      setError('Интервал — не меньше 0.5 часа')
+    if (!Number.isFinite(minutes) || minutes < 1) {
+      setError('Укажите интервал в минутах')
       return
     }
     if (!Number.isFinite(lead) || lead < 0) {
@@ -208,70 +220,78 @@ function FeedingSettingsCard({
       await ensureNotificationPermission()
     }
 
+    const intervalHours = intervalHoursFromMinutes(minutes)
     onSave({
       defaultAmountMl: Math.round(amount),
-      intervalHours: Math.round(interval * 100) / 100,
+      intervalHours,
       notifyBeforeMinutes: Math.round(lead),
       notificationsEnabled,
     })
     setError(null)
     setSavedHint(
-      `Сохранено: ${Math.round(amount)} мл · каждые ${formatIntervalHours(interval)} · за ${Math.round(lead)} мин`,
+      `Сохранено: ${Math.round(amount)} мл · каждые ${formatIntervalHours(intervalHours)} · за ${Math.round(lead)} мин`,
     )
   }
 
   return (
     <section className="settings-block" aria-label="Кормление">
-      <div className="roster__head">
-        <h2 className="roster__title">Кормление</h2>
+      <div className="settings-block__head">
+        <h2 className="settings-block__title">Кормление</h2>
+        <p className="settings-block__lead">
+          Значения по умолчанию и напоминания о следующем кормлении.
+        </p>
       </div>
-      <p className="settings-block__lead">
-        Значения по умолчанию для быстрой записи и напоминаний о следующем
-        кормлении.
-      </p>
 
-      <form className="composer settings-block__form" onSubmit={handleSubmit} noValidate>
-        <div className="composer__fields">
-          <label className="field">
-            <span className="field__label">Объём по умолчанию, мл</span>
+      <form className="feed-settings" onSubmit={handleSubmit} noValidate>
+        <label className="feed-settings__field">
+          <span className="feed-settings__label">Объём по умолчанию</span>
+          <span className="feed-settings__control">
             <input
-              className="field__input"
+              className="feed-settings__input"
               type="number"
               inputMode="numeric"
-              min={1}
-              max={1000}
               step="any"
               value={defaultAmountMl}
               onChange={(event) => setDefaultAmountMl(event.target.value)}
             />
-          </label>
-          <label className="field">
-            <span className="field__label">Интервал, часов</span>
+            <span className="feed-settings__unit">мл</span>
+          </span>
+        </label>
+
+        <label className="feed-settings__field">
+          <span className="feed-settings__label">Интервал между кормлениями</span>
+          <span className="feed-settings__control">
             <input
-              className="field__input"
-              type="number"
-              inputMode="decimal"
-              min={0.5}
-              max={24}
-              step="any"
-              value={intervalHours}
-              onChange={(event) => setIntervalHours(event.target.value)}
-            />
-          </label>
-          <label className="field">
-            <span className="field__label">Напомнить за, минут</span>
-            <input
-              className="field__input"
+              className="feed-settings__input"
               type="number"
               inputMode="numeric"
-              min={0}
-              max={180}
+              step="any"
+              value={intervalMinutes}
+              onChange={(event) => setIntervalMinutes(event.target.value)}
+            />
+            <span className="feed-settings__unit">мин</span>
+          </span>
+          {intervalPreviewHours !== null ? (
+            <span className="feed-settings__hint">
+              При сохранении: {formatIntervalHours(intervalPreviewHours)}
+            </span>
+          ) : null}
+        </label>
+
+        <label className="feed-settings__field">
+          <span className="feed-settings__label">Напомнить заранее</span>
+          <span className="feed-settings__control">
+            <input
+              className="feed-settings__input"
+              type="number"
+              inputMode="numeric"
               step="any"
               value={notifyBeforeMinutes}
               onChange={(event) => setNotifyBeforeMinutes(event.target.value)}
             />
-          </label>
-        </div>
+            <span className="feed-settings__unit">мин</span>
+          </span>
+        </label>
 
         <label className="settings-toggle">
           <input
@@ -286,7 +306,7 @@ function FeedingSettingsCard({
         {savedHint ? <p className="settings-block__saved">{savedHint}</p> : null}
 
         <button type="submit" className="btn btn--primary btn--block">
-          Сохранить кормление
+          Сохранить
         </button>
       </form>
     </section>

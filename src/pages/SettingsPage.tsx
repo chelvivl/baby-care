@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react'
 import type { Baby } from '../domain/baby'
 import { formatBirthDateRu } from '../domain/age'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 
 type BabyInput = {
   name: string
@@ -32,6 +33,7 @@ export function SettingsPage({
   const [form, setForm] = useState<BabyInput>(emptyForm)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<Baby | null>(null)
 
   const todayIso = toLocalIsoDate(new Date())
   const isEditing = editingId !== null
@@ -107,16 +109,21 @@ export function SettingsPage({
 
           <label className="field">
             <span className="field__label">Дата рождения</span>
-            <input
-              className="field__input"
-              type="date"
-              name="birthDate"
-              max={todayIso}
-              value={form.birthDate}
-              onChange={(event) =>
-                setForm((prev) => ({ ...prev, birthDate: event.target.value }))
-              }
-            />
+            <span className="field__date">
+              {!form.birthDate ? (
+                <span className="field__placeholder">Выберите дату</span>
+              ) : null}
+              <input
+                className={`field__input field__input--date${form.birthDate ? '' : ' field__input--empty'}`}
+                type="date"
+                name="birthDate"
+                max={todayIso}
+                value={form.birthDate}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, birthDate: event.target.value }))
+                }
+              />
+            </span>
           </label>
         </div>
 
@@ -178,14 +185,7 @@ export function SettingsPage({
                     <button
                       type="button"
                       className="text-action text-action--danger"
-                      onClick={() => {
-                        if (window.confirm(`Удалить профиль «${baby.name}»?`)) {
-                          if (editingId === baby.id) {
-                            resetForm()
-                          }
-                          onRemove(baby.id)
-                        }
-                      }}
+                      onClick={() => setPendingDelete(baby)}
                     >
                       Удалить
                     </button>
@@ -196,6 +196,30 @@ export function SettingsPage({
           </ul>
         )}
       </section>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Удалить профиль?"
+        message={
+          pendingDelete
+            ? `Профиль «${pendingDelete.name}» будет удалён с этого устройства.`
+            : ''
+        }
+        confirmLabel="Удалить"
+        cancelLabel="Отмена"
+        danger
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (!pendingDelete) {
+            return
+          }
+          if (editingId === pendingDelete.id) {
+            resetForm()
+          }
+          onRemove(pendingDelete.id)
+          setPendingDelete(null)
+        }}
+      />
     </div>
   )
 }
@@ -204,4 +228,5 @@ function toLocalIsoDate(date: Date): string {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`}
+  return `${year}-${month}-${day}`
+}

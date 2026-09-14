@@ -79,31 +79,56 @@ function TabIcon({ tab }: { tab: AppTab }) {
 
 export function BottomNav({ active, onChange }: BottomNavProps) {
   const listRef = useRef<HTMLDivElement>(null)
-  const itemRefs = useRef<Partial<Record<AppTab, HTMLButtonElement | null>>>({})
   const [indicator, setIndicator] = useState({ left: 0, width: 0, ready: false })
+  const activeIndex = TAB_ORDER.indexOf(active)
 
   useLayoutEffect(() => {
+    const list = listRef.current
+    if (!list) {
+      return
+    }
+
     const updateIndicator = () => {
-      const list = listRef.current
-      const activeItem = itemRefs.current[active]
-      if (!list || !activeItem) {
+      const styles = getComputedStyle(list)
+      const padLeft = Number.parseFloat(styles.paddingLeft) || 0
+      const padRight = Number.parseFloat(styles.paddingRight) || 0
+      const innerWidth = list.clientWidth - padLeft - padRight
+      if (innerWidth <= 0) {
         return
       }
 
-      const listRect = list.getBoundingClientRect()
-      const itemRect = activeItem.getBoundingClientRect()
-
+      const width = innerWidth / TAB_ORDER.length
       setIndicator({
-        left: itemRect.left - listRect.left,
-        width: itemRect.width,
+        left: padLeft + activeIndex * width,
+        width,
         ready: true,
       })
     }
 
     updateIndicator()
+
+    const observer = new ResizeObserver(() => updateIndicator())
+    observer.observe(list)
+
+    let cancelled = false
+    void document.fonts.ready.then(() => {
+      if (!cancelled) {
+        updateIndicator()
+      }
+    })
+
+    const raf = window.requestAnimationFrame(updateIndicator)
+    const timeout = window.setTimeout(updateIndicator, 120)
+
     window.addEventListener('resize', updateIndicator)
-    return () => window.removeEventListener('resize', updateIndicator)
-  }, [active])
+    return () => {
+      cancelled = true
+      observer.disconnect()
+      window.cancelAnimationFrame(raf)
+      window.clearTimeout(timeout)
+      window.removeEventListener('resize', updateIndicator)
+    }
+  }, [activeIndex])
 
   return (
     <nav className="bottom-nav" aria-label="Разделы приложения">
@@ -111,7 +136,7 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
         <span
           className={`bottom-nav__indicator${indicator.ready ? ' bottom-nav__indicator--ready' : ''}`}
           style={{
-            transform: `translateX(${indicator.left}px)`,
+            transform: `translate3d(${indicator.left}px, 0, 0)`,
             width: `${indicator.width}px`,
           }}
           aria-hidden="true"
@@ -121,9 +146,6 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
           return (
             <button
               key={tab}
-              ref={(node) => {
-                itemRefs.current[tab] = node
-              }}
               type="button"
               className={`bottom-nav__item${isActive ? ' bottom-nav__item--active' : ''}`}
               aria-current={isActive ? 'page' : undefined}

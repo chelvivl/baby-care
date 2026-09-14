@@ -22,9 +22,9 @@ export function loadSleepState(): SleepState {
     }
     const parsed = JSON.parse(raw) as Partial<SleepState>
     const sessions = Array.isArray(parsed.sessions)
-      ? parsed.sessions.filter(isSession).map(normalizeSession)
+      ? parsed.sessions.filter(isSessionLike).map(normalizeSession)
       : []
-    const activeTimer = isActiveTimer(parsed.activeTimer) ? parsed.activeTimer : null
+    const activeTimer = isActiveTimer(parsed.activeTimer) ? normalizeTimer(parsed.activeTimer) : null
     return { sessions, activeTimer }
   } catch {
     return EMPTY
@@ -51,6 +51,8 @@ export function startTimer(
     startedAt: iso,
     segmentStartedAt: iso,
     accumulatedMs: 0,
+    pausedMs: 0,
+    pauseCount: 0,
     pausedAt: null,
   }
 
@@ -80,10 +82,13 @@ export function resumeTimer(state: SleepState, now = new Date()): SleepState {
     return state
   }
 
+  const pauseSegmentMs = Math.max(0, now.getTime() - new Date(timer.pausedAt).getTime())
   return {
     ...state,
     activeTimer: {
       ...timer,
+      pausedMs: timer.pausedMs + pauseSegmentMs,
+      pauseCount: timer.pauseCount + 1,
       pausedAt: null,
       segmentStartedAt: now.toISOString(),
     },
@@ -96,13 +101,18 @@ export function stopTimer(state: SleepState, now = new Date()): SleepState {
     return state
   }
 
-  let elapsed = timer.accumulatedMs
-  if (!timer.pausedAt) {
-    elapsed += Math.max(0, now.getTime() - new Date(timer.segmentStartedAt).getTime())
+  let sleepMs = timer.accumulatedMs
+  let pausedMs = timer.pausedMs
+  let pauseCount = timer.pauseCount
+
+  if (timer.pausedAt) {
+    pausedMs += Math.max(0, now.getTime() - new Date(timer.pausedAt).getTime())
+    pauseCount += 1
+  } else {
+    sleepMs += Math.max(0, now.getTime() - new Date(timer.segmentStartedAt).getTime())
   }
 
-  // Keep even short sessions — silent drop was confusing while testing.
-  if (elapsed < 1_000) {
+  if (sleepMs < 1_000 && pausedMs < 1_000) {
     return { ...state, activeTimer: null }
   }
 
@@ -112,7 +122,9 @@ export function stopTimer(state: SleepState, now = new Date()): SleepState {
     kind: timer.kind,
     startAt: timer.startedAt,
     endAt: now.toISOString(),
-    durationMs: elapsed,
+    durationMs: sleepMs,
+    pausedMs,
+    pauseCount,
     source: 'timer',
     createdAt: now.toISOString(),
   }
@@ -144,6 +156,8 @@ export function addManualSession(
     startAt: input.startAt,
     endAt: input.endAt,
     durationMs,
+    pausedMs: 0,
+    pauseCount: 0,
     source: 'manual',
     createdAt: new Date().toISOString(),
   }
@@ -178,6 +192,10 @@ export function updateSession(
             startAt: input.startAt,
             endAt: input.endAt,
             durationMs,
+            // Manual edit resets pause stats — wall span is the sleep length.
+            pausedMs: 0,
+            pauseCount: 0,
+            source: session.source === 'timer' ? 'manual' : session.source,
           }
         : session,
     ),
@@ -215,7 +233,7 @@ export function totalSleepMsForBabyDay(
   )
 }
 
-function isSession(value: unknown): value is SleepSession {
+function isSessionLike(value: unknown): value is SleepSession {
   if (!value || typeof value !== 'object') {
     return false
   }
@@ -240,6 +258,8 @@ function normalizeSession(session: SleepSession): SleepSession {
     startAt: session.startAt,
     endAt: session.endAt,
     durationMs: session.durationMs,
+    pausedMs: typeof session.pausedMs === 'number' ? session.pausedMs : 0,
+    pauseCount: typeof session.pauseCount === 'number' ? session.pauseCount : 0,
     source: session.source,
     createdAt: session.createdAt,
   }
@@ -258,4 +278,17 @@ function isActiveTimer(value: unknown): value is ActiveSleepTimer {
     typeof timer.accumulatedMs === 'number' &&
     (timer.pausedAt === null || typeof timer.pausedAt === 'string')
   )
+}
+
+function normalizeTimer(timer: ActiveSleepTimer): ActiveSleepTimer {
+  return {
+    babyId: timer.babyId,
+    kind: timer.kind,
+    startedAt: timer.startedAt,
+    segmentStartedAt: timer.segmentStartedAt,
+    accumulatedMs: timer.accumulatedMs,
+    pausedMs: typeof timer.pausedMs === 'number' ? timer.pausedMs : 0,
+    pauseCount: typeof timer.pauseCount === 'number' ? timer.pauseCount : 0,
+    pausedAt: timer.pausedAt,
+  }
 }

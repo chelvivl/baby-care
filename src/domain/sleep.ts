@@ -12,6 +12,10 @@ export type SleepSession = {
   endAt: string
   /** Actual sleep length (excludes timer pauses) */
   durationMs: number
+  /** Time spent on pause (awake / tracking paused) */
+  pausedMs: number
+  /** How many times the timer was paused */
+  pauseCount: number
   source: SleepSource
   createdAt: string
 }
@@ -24,8 +28,12 @@ export type ActiveSleepTimer = {
   startedAt: string
   /** When the current running segment started */
   segmentStartedAt: string
-  /** Already accumulated while paused previously */
+  /** Already accumulated sleep while running */
   accumulatedMs: number
+  /** Already accumulated pause time from completed pauses */
+  pausedMs: number
+  /** Number of completed pause intervals */
+  pauseCount: number
   /** If set, timer is paused */
   pausedAt: string | null
 }
@@ -49,6 +57,10 @@ export function createSleepId(): string {
 
 export function sessionDurationMs(session: SleepSession): number {
   return Math.max(0, session.durationMs)
+}
+
+export function sessionPausedMs(session: SleepSession): number {
+  return Math.max(0, session.pausedMs ?? 0)
 }
 
 export function timerElapsedMs(timer: ActiveSleepTimer, now = Date.now()): number {

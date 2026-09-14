@@ -3,6 +3,7 @@ import type { Baby } from '../domain/baby'
 import {
   SLEEP_KIND_LABELS,
   sessionDurationMs,
+  sessionPausedMs,
   timerElapsedMs,
   type SleepKind,
   type SleepSession,
@@ -17,6 +18,7 @@ import {
   toDateTimeLocalValue,
   toLocalDateKey,
 } from '../domain/time'
+import { pluralRu } from '../domain/age'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { notifySleepStarted } from '../app/notifications'
 import { useSleepContext } from '../hooks/SleepContext'
@@ -206,25 +208,54 @@ export function SleepPage({ activeBaby, onOpenSettings }: SleepPageProps) {
         </section>
       ) : (
         <section className="sleep-actions">
+          <div className="sleep-start-row">
+            <button
+              type="button"
+              className="sleep-chip sleep-chip--day"
+              onClick={() => setPendingStart('day')}
+            >
+              <span className="sleep-chip__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" strokeWidth="1.7" />
+                  <path
+                    d="M12 3.2v2.1M12 18.7v2.1M3.2 12h2.1M18.7 12h2.1M5.8 5.8l1.5 1.5M16.7 16.7l1.5 1.5M18.2 5.8l-1.5 1.5M7.3 16.7l-1.5 1.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+              <span className="sleep-chip__text">
+                <span className="sleep-chip__label">Дневной</span>
+                <span className="sleep-chip__hint">Таймер</span>
+              </span>
+            </button>
+            <button
+              type="button"
+              className="sleep-chip sleep-chip--night"
+              onClick={() => setPendingStart('night')}
+            >
+              <span className="sleep-chip__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M14.2 4.4A7.8 7.8 0 1 0 19.6 14 6.4 6.4 0 0 1 14.2 4.4Z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              <span className="sleep-chip__text">
+                <span className="sleep-chip__label">Ночной</span>
+                <span className="sleep-chip__hint">Таймер</span>
+              </span>
+            </button>
+          </div>
           <button
             type="button"
-            className="sleep-start sleep-start--day"
-            onClick={() => setPendingStart('day')}
-          >
-            <span className="sleep-start__label">Дневной сон</span>
-            <span className="sleep-start__hint">Запустить таймер</span>
-          </button>
-          <button
-            type="button"
-            className="sleep-start sleep-start--night"
-            onClick={() => setPendingStart('night')}
-          >
-            <span className="sleep-start__label">Ночной сон</span>
-            <span className="sleep-start__hint">Запустить таймер</span>
-          </button>
-          <button
-            type="button"
-            className="btn btn--secondary btn--block"
+            className="sleep-manual-link"
             onClick={() => setView({ kind: 'manual' })}
           >
             Внести вручную
@@ -244,9 +275,9 @@ export function SleepPage({ activeBaby, onOpenSettings }: SleepPageProps) {
           </button>
           <div className="sleep-history__day">
             <p className="sleep-history__title">{formatDayTitleRu(dayKey)}</p>
-            <p className="sleep-history__total">
-              {dayTotalMs > 0 ? `Всего ${formatDurationRu(dayTotalMs)}` : 'Пока без записей'}
-            </p>
+            {dayTotalMs > 0 ? (
+              <p className="sleep-history__total">Сон {formatDurationRu(dayTotalMs)}</p>
+            ) : null}
           </div>
           <button
             type="button"
@@ -260,41 +291,69 @@ export function SleepPage({ activeBaby, onOpenSettings }: SleepPageProps) {
         </div>
 
         {daySessions.length === 0 ? (
-          <p className="sleep-history__empty">В этот день сна ещё не записано.</p>
+          <div className="sleep-empty">
+            <div className="sleep-empty__glyph" aria-hidden="true">
+              <svg viewBox="0 0 48 48">
+                <path
+                  d="M30.5 10.5A14 14 0 1 0 37.5 28 11.5 11.5 0 0 1 30.5 10.5Z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <p className="sleep-empty__title">Пока тихо</p>
+            <p className="sleep-empty__text">
+              Запустите таймер или внесите сон вручную — записи появятся здесь.
+            </p>
+          </div>
         ) : (
           <ul className="sleep-history__list">
-            {daySessions.map((session) => (
-              <li key={session.id} className="sleep-item">
-                <div className="sleep-item__main">
-                  <span className={`sleep-item__badge sleep-item__badge--${session.kind}`}>
-                    {SLEEP_KIND_LABELS[session.kind]}
-                  </span>
-                  <p className="sleep-item__duration">
-                    {formatDurationRu(sessionDurationMs(session))}
-                  </p>
-                  <p className="sleep-item__range">
-                    {formatTimeRu(session.startAt)} – {formatTimeRu(session.endAt)}
-                    {session.source === 'manual' ? ' · вручную' : ''}
-                  </p>
-                </div>
-                <div className="sleep-item__tools">
-                  <button
-                    type="button"
-                    className="text-action"
-                    onClick={() => setView({ kind: 'edit', session })}
-                  >
-                    Изменить
-                  </button>
-                  <button
-                    type="button"
-                    className="text-action text-action--danger"
-                    onClick={() => setPendingDelete(session)}
-                  >
-                    Удалить
-                  </button>
-                </div>
-              </li>
-            ))}
+            {daySessions.map((session) => {
+              const pausedMs = sessionPausedMs(session)
+              const pauseCount = session.pauseCount ?? 0
+              return (
+                <li key={session.id} className="sleep-item">
+                  <div className="sleep-item__main">
+                    <span className={`sleep-item__badge sleep-item__badge--${session.kind}`}>
+                      {SLEEP_KIND_LABELS[session.kind]}
+                    </span>
+                    <p className="sleep-item__duration">
+                      Спал {formatDurationRu(sessionDurationMs(session))}
+                    </p>
+                    <p className="sleep-item__range">
+                      {formatTimeRu(session.startAt)} – {formatTimeRu(session.endAt)}
+                      {session.source === 'manual' ? ' · вручную' : ''}
+                    </p>
+                    {pausedMs > 0 || pauseCount > 0 ? (
+                      <p className="sleep-item__pause">
+                        Просыпался {formatDurationRu(pausedMs)}
+                        {pauseCount > 0
+                          ? ` · ${pauseCount} ${pluralRu(pauseCount, 'пауза', 'паузы', 'пауз')}`
+                          : ''}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="sleep-item__tools">
+                    <button
+                      type="button"
+                      className="text-action"
+                      onClick={() => setView({ kind: 'edit', session })}
+                    >
+                      Изменить
+                    </button>
+                    <button
+                      type="button"
+                      className="text-action text-action--danger"
+                      onClick={() => setPendingDelete(session)}
+                    >
+                      Удалить
+                    </button>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         )}
       </section>

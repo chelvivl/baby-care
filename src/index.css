@@ -14,7 +14,9 @@
   --bg-top: #dce9ee;
   --bg-bottom: #f5ebe3;
   --nav-height: 4.75rem;
+  --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --page-padding-x: 1.25rem;
 }
 
 *,
@@ -23,53 +25,84 @@
   box-sizing: border-box;
 }
 
-html,
-body {
-  margin: 0;
-  min-height: 100%;
+html {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.45;
   color: var(--ink);
-  background:
-    radial-gradient(120% 80% at 50% -10%, #ffffff 0%, transparent 55%),
-    linear-gradient(165deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
-  background-attachment: fixed;
+  background: var(--bg-top);
+}
+
+input,
+textarea,
+[contenteditable='true'] {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 #root {
-  min-height: 100dvh;
+  height: 100%;
+  overflow: hidden;
 }
 
 button {
   font: inherit;
+  touch-action: manipulation;
 }
 
 .app-shell {
-  min-height: 100dvh;
-  max-width: 32rem;
-  margin: 0 auto;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 0 1rem calc(var(--nav-height) + var(--safe-bottom) + 0.75rem);
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 50% -10%, #ffffff 0%, transparent 55%),
+    linear-gradient(165deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
 }
 
 .app-shell__main {
   flex: 1;
-  padding-top: max(1rem, env(safe-area-inset-top));
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: calc(0.75rem + var(--safe-top)) var(--page-padding-x)
+    calc(var(--nav-height) + var(--safe-bottom) + 0.75rem);
 }
 
 .page {
-  animation: page-in 420ms ease both;
+  width: 100%;
+  max-width: 100%;
+  animation: page-in 320ms ease both;
 }
 
 @keyframes page-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -92,7 +125,7 @@ button {
 .home-page__brand {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(2.25rem, 8vw, 2.75rem);
+  font-size: 2.375rem;
   font-weight: 600;
   line-height: 1.05;
   letter-spacing: -0.02em;
@@ -184,10 +217,9 @@ button {
 
 .install-banner {
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
+  left: var(--page-padding-x);
+  right: var(--page-padding-x);
   bottom: calc(var(--nav-height) + var(--safe-bottom) + 0.5rem);
-  width: min(calc(100% - 2rem), 30rem);
   padding: 0.85rem 1rem;
   border-radius: 1rem;
   border: 1px solid var(--line);
@@ -238,10 +270,9 @@ button {
 
 .bottom-nav {
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   bottom: 0;
-  width: min(100%, 32rem);
   padding: 0.35rem 0.75rem calc(0.35rem + var(--safe-bottom));
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -271,6 +302,10 @@ button {
   background: var(--accent-soft);
 }
 
+.bottom-nav__item:active {
+  transform: scale(0.97);
+}
+
 .bottom-nav__icon {
   font-size: 1.1rem;
   line-height: 1;
@@ -281,8 +316,8 @@ button {
   font-weight: 600;
 }
 
-@media (min-width: 480px) {
-  .app-shell {
-    padding-inline: 1.25rem;
+@media (display-mode: standalone) {
+  .install-banner {
+    display: none;
   }
 }

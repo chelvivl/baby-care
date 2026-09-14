@@ -19,9 +19,10 @@ export default defineConfig({
         start_url: repoBase,
         scope: repoBase,
         display: 'standalone',
+        display_override: ['standalone', 'fullscreen'],
         orientation: 'portrait',
-        theme_color: '#4a7c8c',
-        background_color: '#e8f0f3',
+        theme_color: '#dce9ee',
+        background_color: '#dce9ee',
         icons: [
           {
             src: 'apple-touch-icon.svg',
